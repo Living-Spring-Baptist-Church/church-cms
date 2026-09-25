@@ -1,0 +1,21 @@
+packages:
+  - apps/*
+  - packages/*
+
+# pnpm refuses releases younger than minimumReleaseAge (default 1440 minutes, one day) to limit
+# supply chain attacks. turbo 2.11.4 and vitest 5.0.2 were published on 2026-09-24 and 2026-09-25,
+# inside that window, when LBC-12 pinned them. Remove this list from 2026-09-27 onwards.
+minimumReleaseAgeExclude:
+  - "@turbo/darwin-64@2.11.4"
+  - "@turbo/darwin-arm64@2.11.4"
+  - "@turbo/linux-64@2.11.4"
+  - "@turbo/linux-arm64@2.11.4"
+  - "@turbo/windows-64@2.11.4"
+  - "@turbo/windows-arm64@2.11.4"
+  - "@vitest/coverage-v8@5.0.2"
+  - "@vitest/mocker@5.0.2"
+  - "@vitest/spy@5.0.2"
+  - turbo@2.11.4
+  - vitest@5.0.2
+
+saveExact: true
