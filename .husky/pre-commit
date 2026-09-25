@@ -1,0 +1,3 @@
+pnpm exec lint-staged
+node scripts/check-em-dash.mjs --staged
+node scripts/run-gitleaks.mjs
