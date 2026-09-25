@@ -1,0 +1,55 @@
+# ─── Secrets (never commit) ───────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ─── Dependencies ─────────────────────────────────────
+node_modules/
+.pnpm-store/
+
+# ─── Build output ─────────────────────────────────────
+.next/
+out/
+dist/
+build/
+.turbo/
+*.tsbuildinfo
+next-env.d.ts
+
+# ─── Supabase (local only) ────────────────────────────
+supabase/.branches/
+supabase/.temp/
+supabase/.env
+
+# ─── Vercel ───────────────────────────────────────────
+.vercel/
+
+# ─── Tests & coverage ─────────────────────────────────
+coverage/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# ─── Logs ─────────────────────────────────────────────
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ─── Editors & OS ─────────────────────────────────────
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ─── Database dumps (may contain real data) ───────────
+*.sql.gz
+*.dump
+backups/
