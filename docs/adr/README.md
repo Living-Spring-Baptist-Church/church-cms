@@ -1,4 +1,4 @@
-# Church Management System — Architecture Decision Records
+# Church Management System: Architecture Decision Records
 
 Sep 24, 2026 · @Kofi
 

@@ -1,4 +1,4 @@
-# Church Management System — System Architecture
+# Church Management System: System Architecture
 
 Sep 24, 2026 · @Kofi
 
@@ -123,15 +123,15 @@ Until church leadership reviews a working demo, the project spends nothing. Ever
 
 | Need | Demo (now, free) | Later (after church review) | Adapter |
 | --- | --- | --- | --- |
-| Database, auth, storage | Supabase free plan, one hosted demo project + local | Supabase paid plan with daily backups | — (same platform) |
-| Hosting | Vercel free plan, `*.vercel.app` URLs (check its terms for church use) | Paid plan if required; custom domain | — |
+| Database, auth, storage | Supabase free plan, one hosted demo project + local | Supabase paid plan with daily backups | None (same platform) |
+| Hosting | Vercel free plan, `*.vercel.app` URLs (check its terms for church use) | Paid plan if required; custom domain | None |
 | SMS | Outbox only: messages saved and shown in a "sent" log, nothing delivered | Local SMS gateway | `SmsProvider` |
 | Email (beyond login emails) | Outbox only, or a free-tier email service | Transactional email service | `EmailProvider` |
 | Online giving | Not built; UI shows "coming soon" | Payment provider (mobile money, cards) | `PaymentProvider` |
 | Error tracking & uptime | Free tiers, or console logging | Paid tiers if limits are hit | `Monitoring` |
-| Backups | Weekly manual `pg_dump` export | Automatic daily backups | — |
-| Domain name | None | Church domain | — |
-| Sermon video | YouTube embeds (free) | Same | — |
+| Backups | Weekly manual `pg_dump` export | Automatic daily backups | None |
+| Domain name | None | Church domain | None |
+| Sermon video | YouTube embeds (free) | Same | None |
 
 **The adapter pattern.** Features never call a vendor directly; they call an interface, and configuration picks the implementation.
 
@@ -224,7 +224,7 @@ Security rests on three layers: who you are (Auth + 2FA), what you may touch (ro
 | Public website server | Anonymous key: read published content | Members, attendance, finance, audit tables |
 | Dashboard server | User's own session; acts as that user | Service role key (only background jobs hold it) |
 | Background jobs | Service role key, provider API keys | Direct user input without validation |
-| Postgres | Final say on every permission | — |
+| Postgres | Final say on every permission | None |
 
 **Permissions.** Each PRD role maps to a database role claim. RLS policies on every table check it, e.g. only finance roles may insert into offerings, and department heads see only rows for their department. RLS policies get their own automated tests, since one wrong policy is a data leak.
 

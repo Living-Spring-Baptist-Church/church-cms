@@ -1,4 +1,4 @@
-# Church Management System — Product Requirements (PRD)
+# Church Management System: Product Requirements (PRD)
 
 Sep 24, 2026 · @Kofi
 
@@ -41,21 +41,21 @@ Access is role-based: every staff account gets one or more roles, and each role 
 | Department Head | Choir, youth, children, etc. | View and manage their own department's members and programs |
 | Content / Media Team | Media unit, communications volunteers | Publish sermons, announcements, weekly activities, quote of the week, church history |
 
-**Permission matrix** (V = view, E = create/edit, A = approve, — = no access)
+**Permission matrix** (V = view, E = create/edit, A = approve, - = no access)
 
 | Module | Super Admin | Pastor | Treasurer | Secretary | Usher | Dept Head |
 | --- | --- | --- | --- | --- | --- | --- |
 | Members & visitors | E | V | V (names only) | E | V (names only) | V (own dept) |
-| Attendance | E | V | — | E | E | V (own dept) |
-| Programs | E | V | — | E | — | E (own dept) |
-| Offerings, tithes, pledges | V | V | E | — | — | — |
-| Expenses | V | A | E | — | — | — |
-| Business revenue | V | V | E | — | — | — |
-| Messaging | E | E | — | E | — | E (own dept) |
-| Reports & analytics | V | V | V (finance) | V (non-finance) | — | V (own dept) |
-| Audit trail | V | V | — | — | — | — |
-| Settings & users | E | — | — | — | — | — |
-| Public content (Content Team: E) | E | E | — | E | — | E (own dept events) |
+| Attendance | E | V | - | E | E | V (own dept) |
+| Programs | E | V | - | E | - | E (own dept) |
+| Offerings, tithes, pledges | V | V | E | - | - | - |
+| Expenses | V | A | E | - | - | - |
+| Business revenue | V | V | E | - | - | - |
+| Messaging | E | E | - | E | - | E (own dept) |
+| Reports & analytics | V | V | V (finance) | V (non-finance) | - | V (own dept) |
+| Audit trail | V | V | - | - | - | - |
+| Settings & users | E | - | - | - | - | - |
+| Public content (Content Team: E) | E | E | - | E | - | E (own dept events) |
 
 Two safety rules apply everywhere: nobody can approve their own expense, and nobody, including Super Admin, can edit or delete audit trail entries.
 

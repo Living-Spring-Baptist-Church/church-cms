@@ -1,4 +1,4 @@
-# Church Management System — System Design
+# Church Management System: System Design
 
 Sep 24, 2026 · @Kofi
 
