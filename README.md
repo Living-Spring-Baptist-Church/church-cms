@@ -1,0 +1,73 @@
+# Living Spring Baptist Church: Church Management System
+
+A pnpm + Turborepo monorepo with two Next.js App Router apps (the staff dashboard and the public website) and the shared packages they use. Read [`CLAUDE.md`](CLAUDE.md) before contributing, then [`docs/standards/frontend.md`](docs/standards/frontend.md) or [`docs/standards/backend.md`](docs/standards/backend.md).
+
+## Workspaces
+
+| Path                 | Package          | What it is                                                             |
+| -------------------- | ---------------- | ---------------------------------------------------------------------- |
+| `apps/dashboard`     | `@lbc/dashboard` | Staff app. Dev server on port 3000                                     |
+| `apps/web`           | `@lbc/web`       | Public website. Dev server on port 3001                                |
+| `packages/ui`        | `@lbc/ui`        | Shared UI kit (shadcn/ui primitives, brand assets)                     |
+| `packages/config`    | `@lbc/config`    | Tailwind v4 theme (`theme.css`), ESLint, Prettier and tsconfig presets |
+| `packages/db`        | `@lbc/db`        | Database migrations and generated types (stub until LBC-13)            |
+| `packages/providers` | `@lbc/providers` | SMS, email, payment and monitoring adapters (stub, ADR-016)            |
+
+## Prerequisites
+
+- Node.js 24.19.0 or later
+- pnpm 12.6.0 (`corepack enable` picks up the version pinned in `package.json`). Never use npm or yarn.
+- Git
+- Optional: [gitleaks](https://github.com/gitleaks/gitleaks) for the local secret scan. The pre-commit hook warns and skips the scan when it is not installed.
+
+## Pinned versions
+
+Every dependency is pinned to an exact version. ESLint is held at 9.x and TypeScript at 6.0.x because typescript-eslint supports TypeScript below 6.1 only and eslint-plugin-jsx-a11y does not support ESLint 10 yet. Check those peer ranges (`pnpm view <package> peerDependencies`) before bumping either.
+
+The shadcn CLI is not a dependency; it runs through `pnpm dlx` at the version verified against this setup, **shadcn 4.21.0**. See `docs/standards/frontend.md` section 3 for the steps after `shadcn add`.
+
+## Install
+
+```sh
+pnpm install
+```
+
+This also installs the Git hooks (Husky runs through the `prepare` script).
+
+## Run
+
+```sh
+pnpm dev
+```
+
+Starts both apps: the dashboard at http://localhost:3000 and the public site at http://localhost:3001. To run one app only, use `pnpm --filter @lbc/dashboard dev` or `pnpm --filter @lbc/web dev`.
+
+## Quality commands
+
+| Command              | What it does                                                                           |
+| -------------------- | -------------------------------------------------------------------------------------- |
+| `pnpm lint`          | ESLint in every workspace plus the root scripts. Zero errors and zero warnings allowed |
+| `pnpm typecheck`     | `tsc --noEmit` in every workspace (the apps generate Next.js route types first)        |
+| `pnpm test`          | Vitest with v8 coverage (80% lines and branches in `packages/ui`)                      |
+| `pnpm format`        | Prettier, writes changes                                                               |
+| `pnpm format:check`  | Prettier, fails on any difference                                                      |
+| `pnpm check:em-dash` | Fails if any tracked or new text file contains an em dash                              |
+| `pnpm build`         | Production build of both apps                                                          |
+
+To preview a production build locally, build first, then run `pnpm --filter @lbc/web exec next start --port 3001` (or the dashboard on 3000).
+
+## Git hooks
+
+Installed by Husky on `pnpm install`.
+
+| Hook         | Checks                                                                                                                                                                                                                                                                    |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pre-commit` | lint-staged (ESLint and Prettier on staged files), the em dash check on staged files, gitleaks on staged changes when installed                                                                                                                                           |
+| `commit-msg` | commitlint: Conventional Commits, header at most 72 characters                                                                                                                                                                                                            |
+| `pre-push`   | Each pushed branch matches `<type>/LBC-<n>-<short-description>` (types: feat, fix, chore, docs, refactor, test, perf, hotfix, release) or is `dev`, `staging` or `production`. Pushes to `main` are rejected; it changes only through pull requests. Tags are not checked |
+
+To check the current branch name by hand, run `node scripts/check-branch-name.mjs < /dev/null`. In Git Bash the redirect is needed, otherwise the script waits for the ref list git would normally pipe in.
+
+## Styling
+
+Both apps import `@lbc/config/theme.css` from their `src/app/globals.css`. It holds the church palette, the semantic light and dark tokens and the base layer. There is no `tailwind.config.js`. Each `globals.css` has an `@source` line for `packages/ui/src` so the UI kit classes are generated.
