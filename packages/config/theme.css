@@ -1,0 +1,248 @@
+/* Living Spring Baptist Church design tokens. Import after "tailwindcss" in each app's globals.css. */
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Cinzel", ui-serif, Georgia, serif;
+
+  /* Primary. From the church wordmark (#111a3d = 950). */
+  --color-navy-50: #f3f7ff;
+  --color-navy-100: #e6edfe;
+  --color-navy-200: #ccdafe;
+  --color-navy-300: #acc0f2;
+  --color-navy-400: #8ba3e0;
+  --color-navy-500: #6c86ce;
+  --color-navy-600: #4f69b9;
+  --color-navy-700: #3d5396;
+  --color-navy-800: #2d3f74;
+  --color-navy-900: #1d2b54;
+  --color-navy-950: #111a3d;
+
+  /* Blue of the living spring. Links, focus, info (#120ac5 = 800, from the logo). */
+  --color-spring-50: #f3f7ff;
+  --color-spring-100: #e5edff;
+  --color-spring-200: #cbdbfe;
+  --color-spring-300: #a6c0fc;
+  --color-spring-400: #7ba1fc;
+  --color-spring-500: #517ffe;
+  --color-spring-600: #2b57fa;
+  --color-spring-700: #2044cc;
+  --color-spring-800: #120ac5;
+  --color-spring-900: #0b2076;
+  --color-spring-950: #040f4f;
+
+  /* Glory of God. Logo, highlights, dark-mode primary (#e5c164 = 300, #d5a33d = 400). */
+  --color-gold-50: #fff7de;
+  --color-gold-100: #faecc5;
+  --color-gold-200: #ecdaa9;
+  --color-gold-300: #e5c164;
+  --color-gold-400: #d5a33d;
+  --color-gold-500: #b47d04;
+  --color-gold-600: #956301;
+  --color-gold-700: #7b4c02;
+  --color-gold-800: #603801;
+  --color-gold-900: #462400;
+  --color-gold-950: #2b1400;
+
+  /* Blood of Christ, fire of the Spirit. Deep brand red for design accents (#9b0d1a = 700). Never for errors. */
+  --color-crimson-50: #fff4f3;
+  --color-crimson-100: #ffe6e5;
+  --color-crimson-200: #fecdca;
+  --color-crimson-300: #fda6a3;
+  --color-crimson-400: #ee7f7d;
+  --color-crimson-500: #db585a;
+  --color-crimson-600: #c42c39;
+  --color-crimson-700: #9b0d1a;
+  --color-crimson-800: #7b131e;
+  --color-crimson-900: #590712;
+  --color-crimson-950: #3a0106;
+
+  /* Errors and destructive actions only (#f00d10 = 500, the logo red). */
+  --color-danger-50: #fff4f2;
+  --color-danger-100: #ffe6e3;
+  --color-danger-200: #ffcdc6;
+  --color-danger-300: #ffa69c;
+  --color-danger-400: #ff7267;
+  --color-danger-500: #f00d10;
+  --color-danger-600: #ce121b;
+  --color-danger-700: #a70612;
+  --color-danger-800: #7f090e;
+  --color-danger-900: #5c0105;
+  --color-danger-950: #3a0002;
+
+  /* Navy-tinted greys for text, borders and backgrounds. */
+  --color-neutral-50: #f5f7fb;
+  --color-neutral-100: #ebedf1;
+  --color-neutral-200: #d8dbe0;
+  --color-neutral-300: #bec1c8;
+  --color-neutral-400: #a1a5ad;
+  --color-neutral-500: #848993;
+  --color-neutral-600: #6a6f79;
+  --color-neutral-700: #545861;
+  --color-neutral-800: #3f424a;
+  --color-neutral-900: #2b2e33;
+  --color-neutral-950: #191b1f;
+
+  /* Status: success. */
+  --color-success-50: #e5ffe9;
+  --color-success-100: #d5f8da;
+  --color-success-200: #bce8c4;
+  --color-success-300: #99d1a4;
+  --color-success-400: #71b880;
+  --color-success-500: #459f5d;
+  --color-success-600: #04853c;
+  --color-success-700: #0c6a30;
+  --color-success-800: #035122;
+  --color-success-900: #033816;
+  --color-success-950: #01220a;
+
+  /* Status: warning. Orange, kept distinct from gold. */
+  --color-warning-50: #fff4ef;
+  --color-warning-100: #ffe8da;
+  --color-warning-200: #fed0b4;
+  --color-warning-300: #f4af86;
+  --color-warning-400: #e18d58;
+  --color-warning-500: #cd6b22;
+  --color-warning-600: #aa5307;
+  --color-warning-700: #894100;
+  --color-warning-800: #683104;
+  --color-warning-900: #4a2103;
+  --color-warning-950: #2e1201;
+
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: var(--color-navy-950);
+  --card: #ffffff;
+  --card-foreground: var(--color-navy-950);
+  --popover: #ffffff;
+  --popover-foreground: var(--color-navy-950);
+  --primary: var(--color-navy-900);
+  --primary-foreground: #ffffff;
+  --secondary: var(--color-neutral-100);
+  --secondary-foreground: var(--color-navy-950);
+  --muted: var(--color-neutral-50);
+  --muted-foreground: var(--color-neutral-600);
+  --accent: var(--color-navy-50);
+  --accent-foreground: var(--color-navy-950);
+  --brand: var(--color-gold-300);
+  --brand-foreground: var(--color-navy-950);
+  --brand-text: var(--color-gold-700);
+  --crimson: var(--color-crimson-700);
+  --crimson-foreground: #ffffff;
+  --crimson-text: var(--color-crimson-700);
+  --link: var(--color-spring-700);
+  --destructive: var(--color-danger-600);
+  --destructive-foreground: #ffffff;
+  --destructive-text: var(--color-danger-600);
+  --success: var(--color-success-700);
+  --success-surface: var(--color-success-50);
+  --warning: var(--color-warning-800);
+  --warning-surface: var(--color-warning-50);
+  --info: var(--color-spring-700);
+  --info-surface: var(--color-spring-50);
+  --border: var(--color-neutral-200);
+  --input: var(--color-neutral-300);
+  --ring: var(--color-spring-600);
+  --sidebar: var(--color-navy-950);
+  --sidebar-foreground: var(--color-neutral-200);
+  --sidebar-active: var(--color-gold-300);
+  --sidebar-border: var(--color-navy-900);
+}
+
+.dark {
+  --background: var(--color-navy-950);
+  --foreground: var(--color-neutral-50);
+  --card: var(--color-navy-900);
+  --card-foreground: var(--color-neutral-50);
+  --popover: var(--color-navy-900);
+  --popover-foreground: var(--color-neutral-50);
+  --primary: var(--color-gold-300);
+  --primary-foreground: var(--color-navy-950);
+  --secondary: var(--color-navy-800);
+  --secondary-foreground: var(--color-neutral-50);
+  --muted: var(--color-navy-900);
+  --muted-foreground: var(--color-neutral-300);
+  --accent: var(--color-navy-800);
+  --accent-foreground: var(--color-neutral-50);
+  --brand: var(--color-gold-300);
+  --brand-foreground: var(--color-navy-950);
+  --brand-text: var(--color-gold-300);
+  --crimson: var(--color-crimson-700);
+  --crimson-foreground: #ffffff;
+  --crimson-text: var(--color-crimson-300);
+  --link: var(--color-spring-300);
+  --destructive: var(--color-danger-400);
+  --destructive-foreground: var(--color-navy-950);
+  --destructive-text: var(--color-danger-300);
+  --success: var(--color-success-300);
+  --success-surface: var(--color-success-950);
+  --warning: var(--color-warning-300);
+  --warning-surface: var(--color-warning-950);
+  --info: var(--color-spring-300);
+  --info-surface: var(--color-spring-950);
+  --border: var(--color-navy-800);
+  --input: var(--color-navy-700);
+  --ring: var(--color-spring-400);
+  --sidebar: #0b1230;
+  --sidebar-foreground: var(--color-neutral-200);
+  --sidebar-active: var(--color-gold-300);
+  --sidebar-border: var(--color-navy-900);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-text: var(--brand-text);
+  --color-crimson: var(--crimson);
+  --color-crimson-foreground: var(--crimson-foreground);
+  --color-crimson-text: var(--crimson-text);
+  --color-link: var(--link);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive-text: var(--destructive-text);
+  --color-success: var(--success);
+  --color-success-surface: var(--success-surface);
+  --color-warning: var(--warning);
+  --color-warning-surface: var(--warning-surface);
+  --color-info: var(--info);
+  --color-info-surface: var(--info-surface);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-active: var(--sidebar-active);
+  --color-sidebar-border: var(--sidebar-border);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
