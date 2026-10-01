@@ -18,6 +18,12 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check:em-dash": "node scripts/check-em-dash.mjs",
+    "db:start": "pnpm --filter @lbc/db supabase start",
+    "db:stop": "pnpm --filter @lbc/db supabase stop",
+    "db:status": "pnpm --filter @lbc/db supabase status",
+    "db:reset": "pnpm --filter @lbc/db supabase db reset",
+    "db:test": "pnpm --filter @lbc/db supabase test db",
+    "db:new": "pnpm --filter @lbc/db supabase migration new",
     "prepare": "husky"
   },
   "devDependencies": {

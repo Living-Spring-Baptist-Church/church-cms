@@ -1,6 +1,6 @@
 # Backend Standards
 
-Applies to `packages/db` (Postgres: schema, RLS, functions, tests), `supabase/functions` (edge functions) and `packages/providers` (adapters). Read `CLAUDE.md` first; this document adds the backend detail. Table definitions and API operations are specified in `docs/system-design.md`.
+Applies to `supabase/` (Postgres: schema, RLS, functions, tests, seed, and edge functions in `supabase/functions`), `packages/db` (CLI and generated types) and `packages/providers` (adapters). Read `CLAUDE.md` first; this document adds the backend detail. Table definitions and API operations are specified in `docs/system-design.md`.
 
 ---
 
@@ -22,17 +22,18 @@ Schemas: `public` (exposed to GraphQL), `private` (helpers, never exposed), `aud
 ## 2. Folder structure
 
 ```
-packages/db/
+supabase/                     the Supabase CLI requires this layout; it has no setting to move migrations
+  config.toml
   migrations/                 <timestamp>_<verb>_<object>.sql (created by the Supabase CLI)
   tests/<domain>/             <topic>.test.sql (pgTAP)
-  seed/seed.sql               fake demo data only, fixed random seed
-  types/                      generated TypeScript types (never edited by hand)
-supabase/
+  seed.sql                    fake demo data only, fixed random seed
   functions/<job-name>/
     index.ts                  thin handler: parse, call the service, respond
     <job-name>.service.ts     the job's logic
     <job-name>.test.ts
-  config.toml
+packages/db/
+  package.json                pinned Supabase CLI; the root pnpm db:* scripts run it
+  types/                      generated TypeScript types (never edited by hand)
 packages/providers/src/
   <capability>/               sms/, email/, payments/, monitoring/
     <capability>.types.ts     the interface (e.g. SmsProvider)
@@ -138,7 +139,7 @@ raise exception using
 
 ## 10. Testing (pgTAP and edge functions)
 
-- One test file per domain topic: `packages/db/tests/finance/ledger-reversal.test.sql`.
+- One test file per domain topic: `supabase/tests/finance/ledger-reversal.test.sql`. Cross-cutting schema checks live in `supabase/tests/structure/`.
 - Descriptions read as BDD: `'should reject an offering when the period is closed'`.
 - Tests run as a specific role by setting the JWT claims helper, never as the database owner, so RLS is really exercised.
 - Every policy: allowed and denied cases for each role touched.
@@ -174,11 +175,13 @@ SENTRY_DSN                      optional, error tracking
 ## 14. Commands
 
 ```
-supabase start                  local Postgres, Auth, Storage, GraphQL (needs Docker)
-supabase migration new <name>   new migration file
-supabase db reset               rebuild local database from migrations + seed
-supabase test db                run pgTAP tests
-supabase gen types typescript --local > packages/db/types/database.ts
+pnpm db:start                   local Postgres, Auth, Storage, GraphQL (needs Docker)
+pnpm db:status                  local URLs and keys for .env.local
+pnpm db:new <verb>_<object>     new migration file
+pnpm db:reset                   rebuild local database from migrations + seed
+pnpm db:test                    run pgTAP tests
+pnpm db:stop                    stop the local stack
+supabase gen types typescript --local > packages/db/types/database.ts   (wired up in LBC-14)
 pnpm verify                     everything CI runs
 ```
 

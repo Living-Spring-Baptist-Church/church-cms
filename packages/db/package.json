@@ -9,11 +9,13 @@
   },
   "scripts": {
     "lint": "eslint --max-warnings 0 .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "supabase": "supabase --workdir ../.."
   },
   "devDependencies": {
     "@lbc/config": "workspace:*",
     "eslint": "9.39.5",
+    "supabase": "2.117.0",
     "typescript": "6.0.3"
   }
 }

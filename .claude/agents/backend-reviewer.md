@@ -37,7 +37,7 @@ Treat every permission gap as a data leak and every finance bug as lost trust. B
 **Verdict:** APPROVE | REQUEST_CHANGES
 
 ### Blocking (must fix)
-1. `packages/db/migrations/<file>.sql:31`: problem. Risk. Suggested fix.
+1. `supabase/migrations/<file>.sql:31`: problem. Risk. Suggested fix.
 
 ### Non-blocking
 1. ...
