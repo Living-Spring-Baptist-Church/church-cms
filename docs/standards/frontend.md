@@ -93,6 +93,10 @@ packages/ui/src/
 
 This is the single source of truth for reusable UI. See the Shared Component Extension Rule (§10).
 
+Inside `packages/ui`, import across folders with the package's subpath imports (`#helpers/*`, `#primitives/*`, `#components/*`, defined in its `package.json`); apps import only from `@lbc/ui`.
+
+**Adding a shadcn primitive.** The shadcn CLI writes one flat file (`src/primitives/<name>.tsx`), and its current registry imports `cn` from the `cn` npm package and Radix from `radix-ui`. So preview first with `pnpm dlx shadcn@4.21.0 add <name> --dry-run --view` (the version verified in LBC-12, also recorded in the root README) from `packages/ui`, then after adding: move the file to `primitives/<name>/<name>.tsx`, import `cn` from `#helpers/cn.utils` and Radix from its scoped `@radix-ui/react-*` package, remove any `cn` or `radix-ui` dependency the CLI added, replace arbitrary values and raw colours with tokens, review any `theme.css` edit, export it from `src/index.ts`, and add its colocated test.
+
 ## 4. Styling and design tokens
 
 - Colours, spacing, font sizes, radii, shadows, durations and easings come from tokens in `packages/config/theme.css`. Both apps import that one file.

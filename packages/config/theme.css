@@ -1,10 +1,14 @@
 /* Living Spring Baptist Church design tokens. Import after "tailwindcss" in each app's globals.css. */
 
+/* Generate the classes used by the shared UI kit in every app that imports this file. */
+@source "../ui/src";
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Cinzel", ui-serif, Georgia, serif;
+  /* --font-inter and --font-cinzel are set by next/font on <html> in each app. */
+  --font-sans: var(--font-inter, "Inter"), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-cinzel, "Cinzel"), ui-serif, Georgia, serif;
 
   /* Primary. From the church wordmark (#111a3d = 950). */
   --color-navy-50: #f3f7ff;
@@ -240,8 +244,22 @@
   --color-sidebar-border: var(--sidebar-border);
 }
 
+@layer base {
+  *,
+  ::after,
+  ::before {
+    @apply border-border outline-ring;
+  }
+
+  body {
+    @apply bg-background font-sans text-foreground antialiased;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }

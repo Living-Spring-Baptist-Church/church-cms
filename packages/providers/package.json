@@ -1,0 +1,19 @@
+{
+  "name": "@lbc/providers",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint --max-warnings 0 .",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@lbc/config": "workspace:*",
+    "eslint": "9.39.5",
+    "typescript": "6.0.3"
+  }
+}

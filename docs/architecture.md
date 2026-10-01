@@ -75,6 +75,7 @@ church-cms/
     db/            # SQL migrations, RLS policies, generated types
     ui/            # shared components
     config/        # lint, TypeScript, shared Tailwind v4 theme (CSS @theme tokens)
+    providers/     # SMS / email / payment / monitoring adapters (ADR-016)
   supabase/
     functions/     # edge functions (background jobs)
   docs/

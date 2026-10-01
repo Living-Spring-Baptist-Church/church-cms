@@ -1,0 +1,14 @@
+{
+  "extends": "@lbc/config/tsconfig/nextjs.json",
+  "compilerOptions": {
+    "paths": {
+      "@core/*": ["./src/core/*"],
+      "@features/*": ["./src/features/*"],
+      "@graphql/*": ["./src/graphql/*"],
+      "@config/*": ["./src/config/*"],
+      "@helpers/*": ["./src/helpers/*"]
+    }
+  },
+  "include": ["next-env.d.ts", "next.config.ts", "src", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}

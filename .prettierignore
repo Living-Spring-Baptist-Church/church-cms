@@ -1,0 +1,10 @@
+pnpm-lock.yaml
+coverage/
+.next/
+.turbo/
+next-env.d.ts
+
+# Hand-authored project docs stay byte-for-byte as written. The em dash check still scans them.
+CLAUDE.md
+docs/
+.claude/
