@@ -93,13 +93,12 @@ jobs:
       - name: Scan the history for secrets
         run: '"$RUNNER_TEMP/gitleaks" git --redact --no-banner --verbose'
 
-  # Not a required check: a new advisory would block unrelated pull requests. It reports, it does
-  # not gate, until the tech lead decides otherwise (README, "Continuous integration").
+  # Fails on a high or critical production advisory. Not a required check yet: the tech lead decides
+  # whether to add it to branch protection (README, "Continuous integration").
   dependency-audit:
     name: Dependency audit
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    continue-on-error: true
     steps:
       - name: Check out the code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -115,4 +114,4 @@ jobs:
         run: corepack enable
 
       - name: Audit production dependencies
-        run: pnpm audit --prod
+        run: pnpm audit --prod --audit-level high
