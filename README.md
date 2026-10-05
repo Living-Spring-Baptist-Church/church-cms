@@ -55,7 +55,19 @@ Starts both apps: the dashboard at http://localhost:3000 and the public site at 
 | `pnpm format`        | Prettier, writes changes                                                               |
 | `pnpm format:check`  | Prettier, fails on any difference                                                      |
 | `pnpm check:em-dash` | Fails if any tracked or new text file contains an em dash                              |
+| `pnpm duplicates`    | jscpd: fails on any duplicated block of 100 or more tokens (`.jscpd.json`)             |
+| `pnpm verify`        | Every gate above in order, plus the database and generated files checks (see below)    |
 | `pnpm build`         | Production build of both apps                                                          |
+
+### `pnpm verify`
+
+One command, same locally and in CI. It stops at the first failure and runs, in order:
+
+1. Static checks: `format:check`, `lint`, `check:em-dash`, `typecheck`, `test` (coverage), `duplicates`.
+2. Database checks: `db:reset`, `db:test` (pgTAP, including the RLS and audit structure test), then `schema:export --require-database`.
+3. `codegen:check`: the committed GraphQL schema and generated types must match what the migrations and `.graphql` files produce.
+
+Local and CI differ only in when step 2 runs. In CI it always runs. Locally it runs when `supabase/` changed against `main` (or `origin/main`), or when you pass `pnpm verify --database`. It needs the local stack: run `pnpm db:start` first. `codegen:check` compares with Git, so after changing a migration, commit the regenerated `graphql/schema.graphql` and `packages/db/src/generated/` before expecting `verify` to pass.
 
 ## Database
 
@@ -93,11 +105,46 @@ Operations live in `graphql/queries/` and `graphql/mutations/` as `.graphql` fil
 | `pnpm codegen`       | Runs `schema:export`, then generates the types. Without Docker it keeps the committed schema            |
 | `pnpm codegen:check` | Regenerates and fails if the generated files differ from Git. CI only: it fails on any uncommitted tree |
 
-`pnpm codegen:check` is not wired into `pnpm verify` or CI yet. LBC-15 must add it. For full coverage of "CI fails if generated types are out of date", the CI job runs, in order: `supabase db reset`, `pnpm schema:export --require-database` (fails instead of skipping when the database is down), then `pnpm codegen:check`. That catches both a schema that drifted from the migrations and types that drifted from the schema.
+`pnpm verify` runs `pnpm codegen:check` (see Quality commands). For full coverage of "CI fails if generated types are out of date", CI runs, in order: `supabase db reset`, `pnpm schema:export --require-database` (fails instead of skipping when the database is down), then `pnpm codegen:check`. That catches both a schema that drifted from the migrations and types that drifted from the schema.
 
 The export runs the introspection query inside Postgres as the `anon` role (`docker exec psql` and `graphql.resolve()`). It needs no API key, and the service role key is never used. It turns pg_graphql introspection on inside a transaction that is rolled back, because introspection is off by default.
 
 The client is urql (ADR-015). `apps/dashboard/src/config/graphql-client.ts` sends the signed-in user's access token as the bearer and the anon key as `apikey`.
+
+## Continuous integration
+
+`.github/workflows/ci.yml` runs on every pull request and on every push to `main`. It uses free GitHub-hosted `ubuntu-latest` runners only, needs no secrets, and cancels a superseded run when a pull request gets a new push. Actions are pinned by commit SHA (the release tag is in the comment); bump them by hand. Node is pinned to major 24 in the workflow, because `engines` (`>=24.19.0`) would otherwise float to Node 26. pnpm comes from the `packageManager` field through Corepack, and the Supabase CLI is the one pinned in `packages/db`. CI starts only the database container (`supabase start -x ...`) because pgTAP and the schema export need nothing else.
+
+| Job (status check name) | What it runs                                                                                                  | Required |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------- | -------- |
+| `Verify`                | Install, then `pnpm verify`: format, lint, em dashes, types, tests, duplicates, pgTAP, schema export, codegen | Yes      |
+| `Secret scan`           | gitleaks 8.30.1 (binary, checksum verified) over the full Git history, zero findings allowed                  | Yes      |
+| `Dependency audit`      | `pnpm audit --prod`. Reports only (`continue-on-error`), so a new advisory cannot block unrelated work        | No       |
+
+The `gitleaks-action` is not used: it needs a paid license key for organisation repositories.
+
+### RLS and audit structure check
+
+`supabase/tests/structure/public-tables-security.test.sql` runs inside `pnpm db:test`, locally and in CI. It fails if any table in `public` has row level security disabled (`RLS_DISABLED`), has no policy (`NO_POLICIES`) or has no enabled audit trigger (`NO_AUDIT_TRIGGER`). A table counts as audited when it has an enabled trigger that runs `audit.record_change()`. That function does not exist yet, so the audit part is off and turns itself on the moment `audit.record_change()` is created; no edit is needed. The same file proves each failure with probe tables that are rolled back.
+
+### Branch protection on `main` (a repository setting, applied once by the tech lead)
+
+Branch protection is not part of the workflow file. Apply it with an admin token, once the `CI` workflow has run at least once so the check names exist:
+
+```sh
+gh api --method PUT repos/Living-Spring-Baptist-Church/church-cms/branches/main/protection --input - <<'JSON'
+{
+  "required_status_checks": { "strict": true, "checks": [{ "context": "Verify" }, { "context": "Secret scan" }] },
+  "enforce_admins": true,
+  "required_pull_request_reviews": { "required_approving_review_count": 1, "dismiss_stale_reviews": true },
+  "restrictions": null,
+  "allow_force_pushes": false,
+  "allow_deletions": false
+}
+JSON
+```
+
+This requires a pull request with one approval, requires `Verify` and `Secret scan` to pass on an up-to-date branch, applies to admins too, and blocks direct pushes, force pushes and deletion. Renaming a job in `ci.yml` changes its check name and must be matched here. GitHub only offers branch protection on private repositories on a paid plan; on the free plan the repository must be public, or a repository ruleset on a public repository is needed.
 
 ## Git hooks
 

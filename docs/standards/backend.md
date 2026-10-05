@@ -144,7 +144,7 @@ raise exception using
 - Tests run as a specific role by setting the JWT claims helper, never as the database owner, so RLS is really exercised.
 - Every policy: allowed and denied cases for each role touched.
 - Every finance rule: the success case and every failure case (closed period, self-approval, same counter, double reversal, deposit not counted as income).
-- A structural test fails if any `public` table lacks RLS, policies or the audit trigger, or if `audit.log` accepts UPDATE or DELETE.
+- A structural test fails if any `public` table lacks RLS, policies or the audit trigger, or if `audit.log` accepts UPDATE or DELETE. The table check is `supabase/tests/structure/public-tables-security.test.sql`; its audit trigger part activates when `audit.record_change()` exists. The `audit.log` immutability test lands with the audit work.
 - Edge functions and providers: Vitest-style tests with the same rules as the frontend (colocated, BDD names, 80% coverage, no real network).
 
 ## 11. Edge functions and providers
@@ -182,7 +182,7 @@ pnpm db:reset                   rebuild local database from migrations + seed
 pnpm db:test                    run pgTAP tests
 pnpm db:stop                    stop the local stack
 supabase gen types typescript --local > packages/db/types/database.ts   (wired up in LBC-14)
-pnpm verify                     everything CI runs
+pnpm verify                     everything CI runs (database steps run locally when supabase/ changed, or with --database)
 ```
 
 ---
