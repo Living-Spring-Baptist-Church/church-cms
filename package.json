@@ -18,6 +18,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check:em-dash": "node scripts/check-em-dash.mjs",
+    "check:service-role-key": "node scripts/check-service-role-key.mjs",
     "duplicates": "jscpd",
     "verify": "node scripts/verify.mjs",
     "schema:export": "node scripts/export-graphql-schema.mjs",
