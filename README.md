@@ -116,11 +116,11 @@ The client is urql (ADR-015). `apps/dashboard/src/config/graphql-client.ts` send
 
 `.github/workflows/ci.yml` runs on every pull request and on every push to `main`. It uses free GitHub-hosted `ubuntu-latest` runners only, needs no secrets, and cancels a superseded run when a pull request gets a new push. Actions are pinned by commit SHA (the release tag is in the comment); bump them by hand. Node is pinned to major 24 in the workflow, because `engines` (`>=24.19.0`) would otherwise float to Node 26. pnpm comes from the `packageManager` field through Corepack, and the Supabase CLI is the one pinned in `packages/db`. CI starts only the database container (`supabase start -x ...`) because pgTAP and the schema export need nothing else.
 
-| Job (status check name) | What it runs                                                                                                  | Required |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------- | -------- |
-| `Verify`                | Install, then `pnpm verify`: format, lint, em dashes, types, tests, duplicates, pgTAP, schema export, codegen | Yes      |
-| `Secret scan`           | gitleaks 8.30.1 (binary, checksum verified) over the full Git history, zero findings allowed                  | Yes      |
-| `Dependency audit`      | `pnpm audit --prod`. Reports only (`continue-on-error`), so a new advisory cannot block unrelated work        | No       |
+| Job (status check name) | What it runs                                                                                                                     | Required |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `Verify`                | Install, then `pnpm verify`: format, lint, em dashes, types, tests, duplicates, pgTAP, schema export, codegen                    | Yes      |
+| `Secret scan`           | gitleaks 8.30.1 (binary, checksum verified) over the full Git history, zero findings allowed                                     | Yes      |
+| `Dependency audit`      | `pnpm audit --prod --audit-level high`. Fails on any high or critical production advisory. Not yet in the branch-protection list | No       |
 
 The `gitleaks-action` is not used: it needs a paid license key for organisation repositories.
 
