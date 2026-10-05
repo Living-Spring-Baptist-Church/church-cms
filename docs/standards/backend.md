@@ -118,6 +118,9 @@ raise exception using
 | `FINANCE_SAME_COUNTER` | Second cash counter is the first counter |
 | `FINANCE_ALREADY_REVERSED` | Ledger entry was already reversed |
 | `CONTENT_NOT_APPROVED` | Publishing without required approval |
+| `STAFF_LAST_SUPER_ADMIN` | Change would leave the system with no active super admin |
+| `STAFF_INACTIVE` | Target staff member is deactivated (for example granting them a role) |
+| `STAFF_ROLE_ALREADY_GRANTED` | Staff member already holds this role (for this department) |
 
 ## 8. Security
 
