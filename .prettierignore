@@ -8,3 +8,7 @@ next-env.d.ts
 CLAUDE.md
 docs/
 .claude/
+
+# Generated GraphQL schema export and types (pnpm codegen). Never edit by hand.
+graphql/schema.graphql
+packages/db/src/generated/
