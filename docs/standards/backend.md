@@ -56,7 +56,7 @@ Domain names match the frontend exactly: `members`, `attendance`, `content`, `fi
 | Function parameters | `p_` prefix | `p_member_id` |
 | Local variables | `v_` prefix | `v_period` |
 | Policies | `<table>_<action>_<who>` | `members_select_office` |
-| Triggers | `<table>_<purpose>` | `members_audit` |
+| Triggers | `<table>_<purpose>` | `members_updated_at`. The audit trigger is the one exception: `audit_<table>` (system design), e.g. `audit_members`. |
 | Indexes | `<table>_<columns>_idx` | `ledger_entries_period_id_idx` |
 
 With name inflection on, pg_graphql turns these into camelCase (`recordOffering`, `amountMinor`). Never hand-camelCase in SQL.
@@ -70,7 +70,7 @@ Every table, in the migration that creates it:
 - `not null`, `check`, `unique` and foreign key constraints wherever the domain requires them. The database rejects invalid data even if every app has a bug.
 - Money as `amount_minor bigint` + `currency char(3)`, with `check (amount_minor > 0)` and a `direction` where relevant
 - `alter table ... enable row level security;` plus explicit policies for each role in the PRD permission matrix
-- The audit trigger (`audit.record_change()`)
+- The audit trigger: `create trigger audit_<table> after insert or update or delete on public.<table> for each row execute function audit.record_change();` then `alter table public.<table> enable always trigger audit_<table>;` so `session_replication_role = replica` cannot skip it
 - Indexes on every foreign key and on columns used in common filters
 - `comment on table` and `comment on column` for anything exposed. These become the GraphQL API documentation.
 
@@ -121,6 +121,7 @@ raise exception using
 | `STAFF_LAST_SUPER_ADMIN` | Change would leave the system with no active super admin |
 | `STAFF_INACTIVE` | Target staff member is deactivated (for example granting them a role) |
 | `STAFF_ROLE_ALREADY_GRANTED` | Staff member already holds this role (for this department) |
+| `AUDIT_LOG_IMMUTABLE` | Someone tried to update, delete or truncate `audit.log` (never reaches a user in normal use; map to the generic error message) |
 
 ## 8. Security
 
@@ -147,7 +148,7 @@ raise exception using
 - Tests run as a specific role by setting the JWT claims helper, never as the database owner, so RLS is really exercised.
 - Every policy: allowed and denied cases for each role touched.
 - Every finance rule: the success case and every failure case (closed period, self-approval, same counter, double reversal, deposit not counted as income).
-- A structural test fails if any `public` table lacks RLS, policies or the audit trigger, or if `audit.log` accepts UPDATE or DELETE. The table check is `supabase/tests/structure/public-tables-security.test.sql`; its audit trigger part activates when `audit.record_change()` exists. The `audit.log` immutability test lands with the audit work.
+- A structural test fails if any `public` table lacks RLS, policies or a complete audit trigger (row-level AFTER INSERT OR UPDATE OR DELETE running `audit.record_change()`, enabled for normal sessions). It is `supabase/tests/structure/public-tables-security.test.sql`. `audit.log` immutability (UPDATE, DELETE and TRUNCATE refused for every role) is tested in `supabase/tests/audit/`.
 - Edge functions and providers: Vitest-style tests with the same rules as the frontend (colocated, BDD names, 80% coverage, no real network).
 
 ## 11. Edge functions and providers
