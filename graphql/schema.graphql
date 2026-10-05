@@ -1,3 +1,23 @@
+enum AppRole {
+  super_admin
+  pastor
+  treasurer
+  secretary
+  usher
+  department_head
+  content_editor
+}
+
+"""
+Boolean expression comparing fields on type "AppRole"
+"""
+input AppRoleFilter {
+  eq: AppRole
+  in: [AppRole!]
+  is: FilterIs
+  neq: AppRole
+}
+
 """A high precision floating point value represented as a string"""
 scalar BigFloat
 

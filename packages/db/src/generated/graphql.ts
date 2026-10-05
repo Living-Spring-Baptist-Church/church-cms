@@ -35,6 +35,23 @@ export type Scalars = {
   UUID: { input: string; output: string; }
 };
 
+export type AppRole =
+  | 'content_editor'
+  | 'department_head'
+  | 'pastor'
+  | 'secretary'
+  | 'super_admin'
+  | 'treasurer'
+  | 'usher';
+
+/** Boolean expression comparing fields on type "AppRole" */
+export type AppRoleFilter = {
+  eq?: InputMaybe<AppRole>;
+  in?: InputMaybe<Array<AppRole>>;
+  is?: InputMaybe<FilterIs>;
+  neq?: InputMaybe<AppRole>;
+};
+
 /** Boolean expression comparing fields on type "BigFloat" */
 export type BigFloatFilter = {
   eq?: InputMaybe<Scalars['BigFloat']['input']>;
