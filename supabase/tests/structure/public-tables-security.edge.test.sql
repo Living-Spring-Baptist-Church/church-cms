@@ -4,7 +4,7 @@
 
 begin;
 
-select plan(15);
+select plan(14);
 
 create function pg_temp.public_table_security_gaps(p_audit_function regprocedure)
 returns table (table_name name, gap text)
@@ -29,7 +29,13 @@ as $$
         where pg_trigger.tgrelid = tables.oid
           and pg_trigger.tgfoid = p_audit_function::oid
           and not pg_trigger.tgisinternal
-          and pg_trigger.tgenabled <> 'D'
+          and pg_trigger.tgenabled in ('O', 'A')
+          and pg_trigger.tgtype & 1 = 1
+          and pg_trigger.tgtype & 2 = 0
+          and pg_trigger.tgtype & 64 = 0
+          and pg_trigger.tgtype & 28 = 28
+          and pg_trigger.tgattr::text = ''
+          and pg_trigger.tgqual is null
       )
   ) as gaps
   where schemas.nspname = 'public'
@@ -53,9 +59,9 @@ as $$
   where table_name = p_table
 $$;
 
--- The audit part is off today and switches on when audit.record_change() exists
+-- The audit part is on: audit.record_change() exists (LBC-21)
 
-select is(to_regprocedure('audit.record_change()'), null, 'should have no audit.record_change() yet, so the audit part is off');
+select isnt(to_regprocedure('audit.record_change()'), null, 'should have audit.record_change(), so the audit part is on');
 
 create table public.edge_plain (id uuid primary key);
 alter table public.edge_plain enable row level security;
@@ -63,16 +69,8 @@ create policy edge_plain_select on public.edge_plain for select using (true);
 
 select is(
   pg_temp.gaps_of('edge_plain', to_regprocedure('audit.record_change()')),
-  null,
-  'should not require the audit trigger while audit.record_change() does not exist'
-);
-
-create function audit.record_change() returns trigger language plpgsql as $$ begin return new; end; $$;
-
-select is(
-  pg_temp.gaps_of('edge_plain', to_regprocedure('audit.record_change()')),
   'NO_AUDIT_TRIGGER',
-  'should require the audit trigger as soon as audit.record_change() exists'
+  'should require the audit trigger on a table that has none'
 );
 
 create trigger edge_plain_audit after insert or update or delete on public.edge_plain
@@ -81,7 +79,7 @@ create trigger edge_plain_audit after insert or update or delete on public.edge_
 select is(
   pg_temp.gaps_of('edge_plain', to_regprocedure('audit.record_change()')),
   null,
-  'should pass a table with RLS, a policy and an enabled row-level audit trigger'
+  'should pass a table with RLS, a policy and an enabled row-level audit trigger for every change'
 );
 
 -- A policy for one command counts, whatever the command
@@ -120,7 +118,7 @@ select is(pg_temp.gaps_of('edge_partition_child', null), null, 'should skip part
 create table public.edge_inherited_child () inherits (public.edge_plain);
 select is(pg_temp.gaps_of('edge_inherited_child', null), 'NO_POLICIES,RLS_DISABLED', 'should report a table that uses classic inheritance');
 
--- Known gaps: report the actual behaviour so a change is noticed
+-- Triggers that do not audit every change are no longer counted (LBC-21 tightened the gate)
 
 create table public.edge_replica_trigger (id uuid primary key);
 alter table public.edge_replica_trigger enable row level security;
@@ -128,21 +126,21 @@ create policy edge_replica_select on public.edge_replica_trigger for select usin
 create trigger edge_replica_audit after insert on public.edge_replica_trigger
   for each row execute function audit.record_change();
 alter table public.edge_replica_trigger enable replica trigger edge_replica_audit;
-select is(pg_temp.gaps_of('edge_replica_trigger', to_regprocedure('audit.record_change()')), null, 'known gap: should count a trigger set to fire only in replica mode as audited');
+select is(pg_temp.gaps_of('edge_replica_trigger', to_regprocedure('audit.record_change()')), 'NO_AUDIT_TRIGGER', 'should not count a trigger set to fire only in replica mode as audited');
 
 create table public.edge_statement_trigger (id uuid primary key);
 alter table public.edge_statement_trigger enable row level security;
 create policy edge_statement_select on public.edge_statement_trigger for select using (true);
 create trigger edge_statement_audit after insert on public.edge_statement_trigger
   for each statement execute function audit.record_change();
-select is(pg_temp.gaps_of('edge_statement_trigger', to_regprocedure('audit.record_change()')), null, 'known gap: should count a statement-level trigger as audited');
+select is(pg_temp.gaps_of('edge_statement_trigger', to_regprocedure('audit.record_change()')), 'NO_AUDIT_TRIGGER', 'should not count a statement-level trigger as audited');
 
 create table public.edge_insert_only_trigger (id uuid primary key);
 alter table public.edge_insert_only_trigger enable row level security;
 create policy edge_insert_only_trigger_select on public.edge_insert_only_trigger for select using (true);
 create trigger edge_insert_only_trigger_audit after insert on public.edge_insert_only_trigger
   for each row execute function audit.record_change();
-select is(pg_temp.gaps_of('edge_insert_only_trigger', to_regprocedure('audit.record_change()')), null, 'known gap: should count an insert-only trigger as audited');
+select is(pg_temp.gaps_of('edge_insert_only_trigger', to_regprocedure('audit.record_change()')), 'NO_AUDIT_TRIGGER', 'should not count an insert-only trigger as audited');
 
 select * from finish();
 
