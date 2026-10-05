@@ -47,23 +47,24 @@ Starts both apps: the dashboard at http://localhost:3000 and the public site at 
 
 ## Quality commands
 
-| Command              | What it does                                                                           |
-| -------------------- | -------------------------------------------------------------------------------------- |
-| `pnpm lint`          | ESLint in every workspace plus the root scripts. Zero errors and zero warnings allowed |
-| `pnpm typecheck`     | `tsc --noEmit` in every workspace (the apps generate Next.js route types first)        |
-| `pnpm test`          | Vitest with v8 coverage (80% lines and branches in `packages/ui`)                      |
-| `pnpm format`        | Prettier, writes changes                                                               |
-| `pnpm format:check`  | Prettier, fails on any difference                                                      |
-| `pnpm check:em-dash` | Fails if any tracked or new text file contains an em dash                              |
-| `pnpm duplicates`    | jscpd: fails on any duplicated block of 100 or more tokens (`.jscpd.json`)             |
-| `pnpm verify`        | Every gate above in order, plus the database and generated files checks (see below)    |
-| `pnpm build`         | Production build of both apps                                                          |
+| Command                       | What it does                                                                             |
+| ----------------------------- | ---------------------------------------------------------------------------------------- |
+| `pnpm lint`                   | ESLint in every workspace plus the root scripts. Zero errors and zero warnings allowed   |
+| `pnpm typecheck`              | `tsc --noEmit` in every workspace (the apps generate Next.js route types first)          |
+| `pnpm test`                   | Vitest with v8 coverage (80% lines and branches in `packages/ui` and `packages/config`)  |
+| `pnpm format`                 | Prettier, writes changes                                                                 |
+| `pnpm format:check`           | Prettier, fails on any difference                                                        |
+| `pnpm check:em-dash`          | Fails if any tracked or new text file contains an em dash                                |
+| `pnpm check:service-role-key` | Fails if the Supabase service role key is referenced under `apps/` or in a `vercel.json` |
+| `pnpm duplicates`             | jscpd: fails on any duplicated block of 100 or more tokens (`.jscpd.json`)               |
+| `pnpm verify`                 | Every gate above in order, plus the database and generated files checks (see below)      |
+| `pnpm build`                  | Production build of both apps                                                            |
 
 ### `pnpm verify`
 
 One command, same locally and in CI. It stops at the first failure and runs, in order:
 
-1. Static checks: `format:check`, `lint`, `check:em-dash`, `typecheck`, `test` (coverage), `duplicates`.
+1. Static checks: `format:check`, `lint`, `check:em-dash`, `check:service-role-key`, `typecheck`, `test` (coverage), `duplicates`.
 2. Database checks: `db:reset`, `db:test` (pgTAP, including the RLS and audit structure test), then `schema:export --require-database`.
 3. `codegen:check`: the committed GraphQL schema and generated types must match what the migrations and `.graphql` files produce.
 
@@ -91,7 +92,7 @@ The demo runs on the Supabase **free** plan with seed data only (ADR-004, ADR-01
 1. Create a project at https://supabase.com/dashboard on the free plan, in the region closest to the church.
 2. `pnpm --filter @lbc/db supabase login`, then `pnpm --filter @lbc/db supabase link --project-ref <project-ref>`.
 3. `pnpm --filter @lbc/db supabase db push` to apply the migrations. Never enter real member data.
-4. Put the project URL and anon key in the hosting provider's environment settings (LBC-16), never in Git.
+4. Put the project URL and anon key in the Vercel environment settings (see "Deployment on Vercel"), never in Git.
 
 To preview a production build locally, build first, then run `pnpm --filter @lbc/web exec next start --port 3001` (or the dashboard on 3000).
 
@@ -136,7 +137,7 @@ gh api --method PUT repos/Living-Spring-Baptist-Church/church-cms/branches/main/
 {
   "required_status_checks": { "strict": true, "checks": [{ "context": "Verify" }, { "context": "Secret scan" }] },
   "enforce_admins": true,
-  "required_pull_request_reviews": { "required_approving_review_count": 1, "dismiss_stale_reviews": true },
+  "required_pull_request_reviews": { "required_approving_review_count": 0, "dismiss_stale_reviews": true },
   "restrictions": null,
   "allow_force_pushes": false,
   "allow_deletions": false
@@ -144,7 +145,55 @@ gh api --method PUT repos/Living-Spring-Baptist-Church/church-cms/branches/main/
 JSON
 ```
 
-This requires a pull request with one approval, requires `Verify` and `Secret scan` to pass on an up-to-date branch, applies to admins too, and blocks direct pushes, force pushes and deletion. Renaming a job in `ci.yml` changes its check name and must be matched here. GitHub only offers branch protection on private repositories on a paid plan; on the free plan the repository must be public, or a repository ruleset on a public repository is needed.
+This requires a pull request (with 0 required approvals, so the sole author can merge their own pull request after the agent review and QA steps of CLAUDE.md section 3), requires `Verify` and `Secret scan` to pass on an up-to-date branch (`strict`), applies to admins too (`enforce_admins`), and blocks direct pushes, force pushes and deletion. Raise the approval count when a second maintainer joins. Renaming a job in `ci.yml` changes its check name and must be matched here.
+
+The repository is **public** on purpose: GitHub free cannot protect the branches of a private repository, and the Vercel Hobby plan cannot connect a private repository owned by an organisation (ADR-008). Public means no secret and no real data may ever be committed, now or in history (CLAUDE.md rules 7 and 8). The secret scan and the service role key check exist for that reason.
+
+## Deployment on Vercel
+
+Two Vercel projects on the free Hobby plan, both connected to this GitHub repository (ADR-008, ADR-016). The tech lead creates them once; day to day work never needs the Vercel CLI.
+
+| Vercel project  | Root directory   |
+| --------------- | ---------------- |
+| `lbc-dashboard` | `apps/dashboard` |
+| `lbc-web`       | `apps/web`       |
+
+- Both projects use the Next.js preset, Node 24.x and "Include source files outside of the Root Directory" (the apps import `packages/ui` and `packages/config`). Vercel installs from the repository root with the pnpm version pinned in `package.json` and builds each app with `next build`. No `vercel.json` is needed, and none may ever contain secrets.
+- Every pull request gets a preview deployment of each app. A push to `main` deploys the Production environment of each project, which is the **demo** (fake seed data only).
+- Build either app locally with `pnpm --filter @lbc/dashboard build` or `pnpm --filter @lbc/web build`.
+
+### Environment variables
+
+Set in the Vercel project settings, per environment, never in Git. `NEXT_PUBLIC_*` values are inlined at build time, so changing one needs a redeploy.
+
+| Variable                        | `lbc-dashboard` | `lbc-web` | Production (the demo)   | Preview            | Development (local)                  |
+| ------------------------------- | --------------- | --------- | ----------------------- | ------------------ | ------------------------------------ |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Yes             | Yes       | Hosted demo project URL | Same as Production | `http://127.0.0.1:54321`             |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes             | Yes       | Demo project anon key   | Same as Production | Local anon key from `pnpm db:status` |
+| `SUPABASE_SERVICE_ROLE_KEY`     | **Never**       | **Never** | **Never**               | **Never**          | **Never**                            |
+
+`APP_ENV` and `SENTRY_DSN` appear in `.env.example`, but no app reads them yet. Add them to this table and to Vercel in the ticket that first reads them.
+
+**The Supabase service role key must never be added to either Vercel project, in any environment.** It bypasses RLS and lives only in Supabase edge function secrets (ADR-004, CLAUDE.md rule 8). `pnpm check:service-role-key`, part of `pnpm verify` and CI, fails when `service_role` is referenced under `apps/` or in any `vercel.json`. It cannot see the Vercel dashboard, so whoever edits the project's environment variables page checks this by hand. Preview deployments use the demo database because there is no separate staging project yet, so they hold fake data only.
+
+### Security headers
+
+Both apps send the same headers on every response. They are defined once in `packages/config/src/security-headers.ts` (unit tested there) and applied through `headers()` in each `next.config.ts`.
+
+| Header                      | Value                                                                            |
+| --------------------------- | -------------------------------------------------------------------------------- |
+| `Strict-Transport-Security` | `max-age=63072000; includeSubDomains` (HTTPS only for two years)                 |
+| `Content-Security-Policy`   | `frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'` |
+| `X-Frame-Options`           | `DENY`                                                                           |
+| `X-Content-Type-Options`    | `nosniff`                                                                        |
+| `Referrer-Policy`           | `strict-origin-when-cross-origin`                                                |
+| `Permissions-Policy`        | `camera=(), microphone=(), geolocation=()`                                       |
+
+- **Nobody may frame either app.** The PRD only embeds third party video into the public site (CNT-04, an outbound frame) and nothing needs another site to embed ours, so `frame-ancestors 'none'` applies to the public site too.
+- **No HSTS `preload`.** Preload is slow to undo and covers every subdomain of the domain. The demo lives on `*.vercel.app`, which Vercel already covers, and the church's own domain is not chosen yet. Revisit when that domain exists and every subdomain serves HTTPS.
+- **The CSP is conservative on purpose.** It has no `script-src`, `style-src` or `connect-src`, because Next.js needs inline scripts for hydration and a strict script policy needs a per request nonce from middleware, which does not exist yet (and would make the static public site dynamic). Follow-up when the dashboard middleware lands: a nonce based `script-src`, plus `connect-src` limited to `'self'` and the `NEXT_PUBLIC_SUPABASE_URL` origin, then the same for the public site with YouTube in `frame-src`. Test it in a browser first, including the Vercel preview toolbar.
+- `upgrade-insecure-requests` is left out: it breaks plain `http://localhost` in some browsers, and HSTS already covers real traffic.
+- `poweredByHeader` is off in both apps.
 
 ## Git hooks
 
