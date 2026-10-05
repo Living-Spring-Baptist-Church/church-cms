@@ -2,7 +2,7 @@
 // CI runs this same command, so a green local run means a green pipeline.
 //
 // Steps run in three groups and stop at the first failure:
-//   1. Static checks: format, lint, em dash, typecheck, unit tests with coverage, duplicates.
+//   1. Static checks: format, lint, em dash, service role key, typecheck, unit tests with coverage, duplicates.
 //   2. Database checks: `supabase db reset`, pgTAP, then a fresh GraphQL schema export.
 //      They need the local stack (`pnpm db:start`). They run in CI, and locally only when
 //      `supabase/` changed against main or when you pass --database.
@@ -23,6 +23,7 @@ const STATIC_STEPS = [
   { label: "Format check", scriptArguments: ["format:check"] },
   { label: "Lint", scriptArguments: ["lint"] },
   { label: "Em dash check", scriptArguments: ["check:em-dash"] },
+  { label: "Service role key check", scriptArguments: ["check:service-role-key"] },
   { label: "Typecheck", scriptArguments: ["typecheck"] },
   { label: "Unit tests with coverage", scriptArguments: ["test"] },
   { label: "Duplicate detection", scriptArguments: ["duplicates"] },
