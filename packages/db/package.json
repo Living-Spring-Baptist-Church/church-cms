@@ -17,5 +17,8 @@
     "eslint": "9.39.5",
     "supabase": "2.117.0",
     "typescript": "6.0.3"
+  },
+  "dependencies": {
+    "@graphql-typed-document-node/core": "3.2.0"
   }
 }
