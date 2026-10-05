@@ -115,7 +115,7 @@ Both apps talk to the database through GraphQL. The proposal is Supabase's built
 
 - **Reads** (members, attendance, reports, public content) use generated queries.
 - **Writes with business rules** (record offering, reverse an entry, close a month, approve an expense) are Postgres functions exposed as mutations, so the rule lives in one place and runs in one transaction.
-- **Client:** GraphQL Code Generator produces TypeScript types and hooks from the schema; a lightweight client (urql or Apollo, ADR-015) handles caching.
+- **Client:** GraphQL Code Generator produces TypeScript types and typed documents from the schema; the urql client (ADR-015) runs them as the signed-in user.
 - **Guardrails:** introspection off in production; query depth and size limits; persisted (allow-listed) queries for the public site so it can only run the handful of queries it needs.
 - **Public site:** uses the anonymous role, which RLS limits to published content, so the GraphQL schema it can reach exposes nothing private.
 

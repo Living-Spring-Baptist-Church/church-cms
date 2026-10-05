@@ -83,6 +83,22 @@ The demo runs on the Supabase **free** plan with seed data only (ADR-004, ADR-01
 
 To preview a production build locally, build first, then run `pnpm --filter @lbc/web exec next start --port 3001` (or the dashboard on 3000).
 
+## GraphQL
+
+Operations live in `graphql/queries/` and `graphql/mutations/` as `.graphql` files. The pg_graphql schema is exported to `graphql/schema.graphql`, and GraphQL Code Generator writes typed documents to `packages/db/src/generated/graphql.ts`. Both are committed and marked generated: never edit them by hand.
+
+| Command              | What it does                                                                                            |
+| -------------------- | ------------------------------------------------------------------------------------------------------- |
+| `pnpm schema:export` | Refreshes `graphql/schema.graphql` from the running local database (`pnpm db:start` first)              |
+| `pnpm codegen`       | Runs `schema:export`, then generates the types. Without Docker it keeps the committed schema            |
+| `pnpm codegen:check` | Regenerates and fails if the generated files differ from Git. CI only: it fails on any uncommitted tree |
+
+`pnpm codegen:check` is not wired into `pnpm verify` or CI yet. LBC-15 must add it. For full coverage of "CI fails if generated types are out of date", the CI job runs, in order: `supabase db reset`, `pnpm schema:export --require-database` (fails instead of skipping when the database is down), then `pnpm codegen:check`. That catches both a schema that drifted from the migrations and types that drifted from the schema.
+
+The export runs the introspection query inside Postgres as the `anon` role (`docker exec psql` and `graphql.resolve()`). It needs no API key, and the service role key is never used. It turns pg_graphql introspection on inside a transaction that is rolled back, because introspection is off by default.
+
+The client is urql (ADR-015). `apps/dashboard/src/config/graphql-client.ts` sends the signed-in user's access token as the bearer and the anon key as `apikey`.
+
 ## Git hooks
 
 Installed by Husky on `pnpm install`.

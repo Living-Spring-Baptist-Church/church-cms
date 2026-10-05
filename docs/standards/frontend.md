@@ -15,7 +15,7 @@ Part I (§1 to §9) describes where things live and how they fit together. Part 
 - **Tailwind CSS v4**, CSS-first configuration. Tokens live in `packages/config/theme.css` inside `@theme { }`. There is no `tailwind.config.js`.
 - **shadcn/ui** as the base for primitives in `packages/ui`. Variants use `cva`, the one variant mechanism in the codebase (it ships with shadcn). Never invent a second one.
 - **Forms:** React Hook Form + Zod. The same Zod schema validates in the browser and in the server action.
-- **Data:** GraphQL (pg_graphql) with typed documents from GraphQL Code Generator. The client library is decided in LBC-14 and recorded in ADR-015.
+- **Data:** GraphQL (pg_graphql) with typed documents from GraphQL Code Generator. The client is urql (ADR-015). Operations are `.graphql` files in the root `graphql/` folder; `pnpm codegen` writes typed documents into `@lbc/db` (`packages/db/src/generated/graphql.ts`, do not edit).
 - **Tests:** Vitest + Testing Library (colocated), Playwright + axe (end to end).
 
 ## 2. App structure
@@ -46,12 +46,9 @@ apps/dashboard/src/
       <domain>.actions.ts            server actions (writes, called from client forms)
     auth/                            session helpers, requireRole(), role groups
     errors/                          AppError, error classification, error-messages.data.ts
-  graphql/
-    queries/<domain>.queries.ts      typed documents, one file per domain
-    mutations/<domain>.mutations.ts
   config/
     graphql-client.ts                the one GraphQL client (auth header + error handling)
-    env.ts                           environment variables validated with Zod at startup
+    env.ts                           environment variables validated at startup (by hand for now; moves to Zod when it is added)
   helpers/<domain>.utils.ts          pure functions (dates, money, pagination, strings)
   middleware.ts                      redirects unauthenticated users to /login
 ```
@@ -65,7 +62,6 @@ Configured in each app's `tsconfig.json` and mirrored in Vitest config:
 ```
 @core/*      -> src/core/*
 @features/*  -> src/features/*
-@graphql/*   -> src/graphql/*
 @config/*    -> src/config/*
 @helpers/*   -> src/helpers/*
 ```
@@ -132,7 +128,7 @@ Every feature follows the same chain. No link is skipped.
 ```
 page.tsx (server component)
   -> core/services/<domain>/<domain>.service.ts   server-only function
-    -> graphql/queries/<domain>.queries.ts        typed document
+    -> @lbc/db typed document                     from graphql/queries/<domain>.graphql
       -> config/graphql-client.ts                 runs as the signed-in user
 ```
 
@@ -141,7 +137,7 @@ page.tsx (server component)
 ```
 client component form (React Hook Form + Zod)
   -> core/services/<domain>/<domain>.actions.ts   server action: re-validates with the same Zod schema
-    -> graphql/mutations/<domain>.mutations.ts
+    -> @lbc/db typed document                     from graphql/mutations/<domain>.graphql
       -> config/graphql-client.ts
   -> revalidatePath / revalidateTag so the page shows fresh data
 ```
@@ -180,7 +176,7 @@ Only for UI component groups: `packages/ui/src/index.ts` and each `features/<dom
 | UI kit component | `packages/ui/src/components/<name>/` | `<name>.tsx` + test | `data-table.tsx` |
 | Service (reads) | `core/services/<domain>/` | `<domain>.service.ts` + test | `members.service.ts` |
 | Server actions | `core/services/<domain>/` | `<domain>.actions.ts` + test | `members.actions.ts` |
-| Query / mutation | `graphql/queries/`, `graphql/mutations/` | `<domain>.queries.ts` | `members.queries.ts` |
+| Query / mutation | `graphql/queries/`, `graphql/mutations/` (repo root) | `<domain>.graphql` | `members.graphql` |
 | View types | `core/types/` | `<domain>.types.ts` | `members.types.ts` |
 | Static config | `core/data/` | `<domain>.data.ts` | `members.data.ts` |
 | Copy | `core/copy/` | `<domain>.copy.ts` | `members.copy.ts` |
@@ -323,7 +319,7 @@ pnpm verify          everything CI runs (see CLAUDE.md §6)
 
 Record real deviations here as they are discovered, with the majority pattern to follow. Never use a minority pattern as a precedent for new code.
 
-- None yet.
+- Node command line scripts under `scripts/` report through `console` (the root ESLint config turns `no-console` off for them), so they are exempt from the logger rule in CLAUDE.md. App and package code still uses the logger.
 
 ---
 
