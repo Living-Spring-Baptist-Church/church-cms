@@ -601,7 +601,7 @@ mutation RecordTithe {
 
 ## Migrations, seed data & testing
 
-**Migrations.** Each change is a timestamped SQL file created with the Supabase CLI (`supabase migration new <name>`) and committed to `packages/db/migrations`. Files run in order, so tables are created before anything that references them (e.g. `members` before `staff.member_id`, or the foreign key is added in a later migration). A migration is never edited after it has run on staging; fix forward with a new one.
+**Migrations.** Each change is a timestamped SQL file created with the Supabase CLI (`supabase migration new <name>`) and committed to `supabase/migrations`. Files run in order, so tables are created before anything that references them (e.g. `members` before `staff.member_id`, or the foreign key is added in a later migration). A migration is never edited after it has run on staging; fix forward with a new one.
 
 Suggested order for Phase 1 and the demo:
 

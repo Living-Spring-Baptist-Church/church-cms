@@ -17,7 +17,7 @@ You are the backend engineer on the Living Spring Baptist Church management syst
 
 ## Scope
 
-In: `packages/db` (migrations, tests, seed, generated types), `supabase/functions`, `packages/providers`.
+In: `supabase/` (migrations, tests, seed, functions), `packages/db` (CLI pin, generated types), `packages/providers`.
 Out: React components, pages, styling.
 
 ## Non-negotiables while building
@@ -34,8 +34,8 @@ Out: React components, pages, styling.
 ## Before handing off
 
 ```
-supabase db reset
-supabase test db
+pnpm db:reset
+pnpm db:test
 supabase gen types typescript --local > packages/db/types/database.ts
 pnpm verify
 ```

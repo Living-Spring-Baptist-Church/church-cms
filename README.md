@@ -10,14 +10,17 @@ A pnpm + Turborepo monorepo with two Next.js App Router apps (the staff dashboar
 | `apps/web`           | `@lbc/web`       | Public website. Dev server on port 3001                                |
 | `packages/ui`        | `@lbc/ui`        | Shared UI kit (shadcn/ui primitives, brand assets)                     |
 | `packages/config`    | `@lbc/config`    | Tailwind v4 theme (`theme.css`), ESLint, Prettier and tsconfig presets |
-| `packages/db`        | `@lbc/db`        | Database migrations and generated types (stub until LBC-13)            |
+| `packages/db`        | `@lbc/db`        | Pinned Supabase CLI and generated database types                       |
 | `packages/providers` | `@lbc/providers` | SMS, email, payment and monitoring adapters (stub, ADR-016)            |
+
+The database lives in `supabase/` at the root, where the Supabase CLI requires it: `config.toml`, `migrations/`, pgTAP `tests/`, `seed.sql` and edge `functions/`.
 
 ## Prerequisites
 
 - Node.js 24.19.0 or later
 - pnpm 12.6.0 (`corepack enable` picks up the version pinned in `package.json`). Never use npm or yarn.
 - Git
+- Docker (Docker Desktop on Windows and macOS), running, for the local database
 - Optional: [gitleaks](https://github.com/gitleaks/gitleaks) for the local secret scan. The pre-commit hook warns and skips the scan when it is not installed.
 
 ## Pinned versions
@@ -54,6 +57,30 @@ Starts both apps: the dashboard at http://localhost:3000 and the public site at 
 | `pnpm check:em-dash` | Fails if any tracked or new text file contains an em dash                              |
 | `pnpm build`         | Production build of both apps                                                          |
 
+## Database
+
+The Supabase CLI is pinned in `packages/db` (**supabase 2.117.0**) and runs through these root scripts. Never install it globally or through npm.
+
+| Command                       | What it does                                                       |
+| ----------------------------- | ------------------------------------------------------------------ |
+| `pnpm db:start`               | Starts local Postgres, Auth, Storage and the GraphQL API in Docker |
+| `pnpm db:status`              | Prints the local URLs and keys                                     |
+| `pnpm db:reset`               | Rebuilds the database from zero: every migration, then `seed.sql`  |
+| `pnpm db:test`                | Runs the pgTAP tests in `supabase/tests`                           |
+| `pnpm db:new <verb>_<object>` | Creates a timestamped migration, e.g. `pnpm db:new create_members` |
+| `pnpm db:stop`                | Stops the local stack                                              |
+
+First run: `pnpm db:start` (the first start downloads the Docker images and takes a few minutes), then copy `.env.example` to `.env.local` and fill it in from `pnpm db:status`. `.env.local` is gitignored; never commit keys.
+
+### Hosted demo project (manual, one time)
+
+The demo runs on the Supabase **free** plan with seed data only (ADR-004, ADR-016). A church account owner does this once:
+
+1. Create a project at https://supabase.com/dashboard on the free plan, in the region closest to the church.
+2. `pnpm --filter @lbc/db supabase login`, then `pnpm --filter @lbc/db supabase link --project-ref <project-ref>`.
+3. `pnpm --filter @lbc/db supabase db push` to apply the migrations. Never enter real member data.
+4. Put the project URL and anon key in the hosting provider's environment settings (LBC-16), never in Git.
+
 To preview a production build locally, build first, then run `pnpm --filter @lbc/web exec next start --port 3001` (or the dashboard on 3000).
 
 ## Git hooks
@@ -70,4 +97,4 @@ To check the current branch name by hand, run `node scripts/check-branch-name.mj
 
 ## Styling
 
-Both apps import `@lbc/config/theme.css` from their `src/app/globals.css`. It holds the church palette, the semantic light and dark tokens and the base layer. There is no `tailwind.config.js`. Each `globals.css` has an `@source` line for `packages/ui/src` so the UI kit classes are generated.
+Both apps import `@lbc/config/theme.css` from their `src/app/globals.css`. It holds the church palette, the semantic light and dark tokens and the base layer. There is no `tailwind.config.js`. `theme.css` has the `@source` line for `packages/ui/src`, so the UI kit classes are generated in both apps.

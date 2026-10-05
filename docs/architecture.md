@@ -72,11 +72,14 @@ church-cms/
     dashboard/     # staff app
     web/           # public website
   packages/
-    db/            # SQL migrations, RLS policies, generated types
+    db/            # pinned Supabase CLI and generated types
     ui/            # shared components
     config/        # lint, TypeScript, shared Tailwind v4 theme (CSS @theme tokens)
     providers/     # SMS / email / payment / monitoring adapters (ADR-016)
   supabase/
+    migrations/    # SQL migrations, RLS policies, functions
+    tests/         # pgTAP tests
+    seed.sql       # fake demo data
     functions/     # edge functions (background jobs)
   docs/
     prd.md  architecture.md  adr/  runbook.md

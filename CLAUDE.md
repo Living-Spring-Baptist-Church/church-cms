@@ -41,9 +41,13 @@ apps/
 packages/
   ui/                 the shared UI kit (@lbc/ui)
   config/             Tailwind v4 theme, ESLint, Prettier, tsconfig (@lbc/config)
-  db/                 SQL migrations, RLS, functions, pgTAP tests, generated types (@lbc/db)
+  db/                 pinned Supabase CLI, db:* scripts, generated types (@lbc/db)
   providers/          SMS / email / payment / monitoring adapters (@lbc/providers)
 supabase/
+  config.toml         local Supabase stack
+  migrations/         SQL migrations: schema, RLS, functions
+  tests/              pgTAP tests
+  seed.sql            fake demo data only
   functions/          edge functions (background jobs)
 docs/
   standards/          frontend.md, backend.md
