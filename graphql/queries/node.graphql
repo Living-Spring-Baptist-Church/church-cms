@@ -1,0 +1,6 @@
+query NodeById($nodeId: ID!) {
+  node(nodeId: $nodeId) {
+    __typename
+    nodeId
+  }
+}

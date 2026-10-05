@@ -1,4 +1,5 @@
 export { cn } from "#helpers/cn.utils";
+export { formatMoney } from "#helpers/money.utils";
 
 export { Button, buttonVariants, type ButtonProps } from "#primitives/button/button";
 export { Card, type CardProps } from "#primitives/card/card";

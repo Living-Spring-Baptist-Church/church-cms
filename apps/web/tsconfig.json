@@ -4,7 +4,6 @@
     "paths": {
       "@core/*": ["./src/core/*"],
       "@features/*": ["./src/features/*"],
-      "@graphql/*": ["./src/graphql/*"],
       "@config/*": ["./src/config/*"],
       "@helpers/*": ["./src/helpers/*"]
     }

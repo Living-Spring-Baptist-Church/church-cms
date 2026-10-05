@@ -118,13 +118,15 @@ ADR-005 to ADR-014 (migrations, UI, forms, hosting, jobs, messaging, media, moni
 
 **Context.** Two apps read the same data in different shapes: the dashboard needs nested views (a member with household, departments, attendance and giving history) and flexible report queries; the public site needs a few simple published-content queries. The developer wants one typed contract for both. The biggest risk with any API layer here is a permission gap that leaks member or finance data.
 
-**Decision.** Use GraphQL through Supabase's built-in pg\_graphql extension. Reads use the generated schema. Writes that carry business rules (record offering, reverse entry, close month, approve expense) are Postgres functions exposed as mutations. Clients use GraphQL Code Generator for TypeScript types; the client library (urql or Apollo Client) is chosen during Phase 1 setup.
+**Decision.** Use GraphQL through Supabase's built-in pg\_graphql extension. Reads use the generated schema. Writes that carry business rules (record offering, reverse entry, close month, approve expense) are Postgres functions exposed as mutations. Clients use GraphQL Code Generator for TypeScript types and typed documents. The client library is **urql** (`@urql/core`, with `@urql/next` added when a client component needs it), chosen in LBC-14. Server components and services call one `createGraphqlClient` per app, which sends the signed-in user's access token as the bearer and the anon key as `apikey`; the service role key is never given to it.
 
 **Options considered**
 
 | Option | For | Against |
 | --- | --- | --- |
 | **GraphQL via pg\_graphql** | Schema generated from the database; every query runs as the signed-in user so RLS applies; no resolver code to secure; typed end to end | Schema shape follows table design; complex logic must live in SQL functions; less control over naming |
+| Client: urql | Small (about a fifth of Apollo's size), works in server components with plain `@urql/core`, document cache is enough for this app, `fetch` is injectable so the session token is added in one place | Smaller ecosystem than Apollo; normalised cache needs an extra package if ever required |
+| Client: Apollo Client | Largest ecosystem, normalised cache built in | Heavier; its cache and hooks are built for client-side data, while this app reads on the server |
 | Custom GraphQL server (GraphQL Yoga + Pothos in Next.js) | Full control over schema and resolvers | Every resolver must enforce permissions by hand; more code to test and maintain |
 | REST / Supabase client + Server Actions | Simplest; fewest moving parts at this scale | No single typed contract for nested reads; developer prefers GraphQL for skill growth |
 
@@ -133,6 +135,8 @@ ADR-005 to ADR-014 (migrations, UI, forms, hosting, jobs, messaging, media, moni
 - RLS remains the only source of truth for permissions; no permission logic in GraphQL clients.
 - Production hardening: introspection off, query depth and size limits, persisted (allow-listed) queries for the public site.
 - Finance rules live in Postgres functions with pgTAP tests, not in app code.
+- The schema is exported from the local database as SDL into `graphql/schema.graphql` (`pnpm schema:export`) and committed. pg_graphql 1.6 only answers introspection when the schema comment sets `"introspection": true`; the export switches it on inside a rolled-back transaction, so the database and production setting are untouched.
+- Operations are `.graphql` files under `graphql/`. `pnpm codegen` writes typed documents to `packages/db/src/generated/graphql.ts`, committed and marked do not edit. `pnpm codegen:check` fails when they are stale. LBC-15 wires it into `pnpm verify` and CI.
 - Learning cost: GraphQL, codegen and client caching add setup time in Phase 1; budget a week for it.
 - Revisit (supersede this ADR) if the generated schema blocks a needed feature; the fallback is a custom Yoga server calling the database as the signed-in user.
 

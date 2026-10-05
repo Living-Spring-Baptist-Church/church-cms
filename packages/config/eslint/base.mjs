@@ -22,6 +22,7 @@ const IGNORED_PATHS = [
   "**/dist/",
   "**/out/",
   "**/next-env.d.ts",
+  "**/generated/",
 ];
 
 export const RESTRICTED_ICON_IMPORTS = {

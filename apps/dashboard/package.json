@@ -7,10 +7,12 @@
     "dev": "next dev --port 3000",
     "build": "next build",
     "lint": "eslint --max-warnings 0 .",
+    "test": "vitest run --coverage",
     "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
     "@lbc/ui": "workspace:*",
+    "@urql/core": "6.0.3",
     "next": "16.3.6",
     "react": "19.3.0",
     "react-dom": "19.3.0"
@@ -21,9 +23,11 @@
     "@types/node": "24.13.6",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
+    "@vitest/coverage-v8": "5.0.2",
     "eslint": "9.39.5",
     "postcss": "8.5.28",
     "tailwindcss": "4.3.3",
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "vitest": "5.0.2"
   }
 }
