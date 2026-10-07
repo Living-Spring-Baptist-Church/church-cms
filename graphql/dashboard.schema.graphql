@@ -232,6 +232,153 @@ input BooleanListFilter {
   overlaps: [Boolean!]
 }
 
+type ContentItems implements Node {
+  """Globally Unique Record Identifier"""
+  nodeId: ID!
+  id: UUID!
+  kind: ContentKind!
+  slug: String
+  title: String!
+  body: String
+  imagePath: String
+  status: ContentStatus!
+  publishAt: Datetime
+  expiresAt: Datetime
+  authorId: UUID!
+  approvedBy: UUID
+  createdAt: Datetime!
+  updatedAt: Datetime!
+  approvedByStaff: Staff
+  authorStaff: Staff
+}
+
+type ContentItemsConnection {
+  edges: [ContentItemsEdge!]!
+  pageInfo: PageInfo!
+}
+
+type ContentItemsEdge {
+  cursor: String!
+  node: ContentItems!
+}
+
+input ContentItemsFilter {
+  id: UUIDFilter
+  kind: ContentKindFilter
+  slug: StringFilter
+  title: StringFilter
+  body: StringFilter
+  imagePath: StringFilter
+  status: ContentStatusFilter
+  publishAt: DatetimeFilter
+  expiresAt: DatetimeFilter
+  authorId: UUIDFilter
+  approvedBy: UUIDFilter
+  createdAt: DatetimeFilter
+  updatedAt: DatetimeFilter
+  nodeId: IDFilter
+
+  """
+  Returns true only if all its inner filters are true, otherwise returns false
+  """
+  and: [ContentItemsFilter!]
+
+  """
+  Returns true if at least one of its inner filters is true, otherwise returns false
+  """
+  or: [ContentItemsFilter!]
+
+  """Negates a filter"""
+  not: ContentItemsFilter
+}
+
+input ContentItemsInsertInput {
+  kind: ContentKind
+  slug: String
+  title: String
+  body: String
+  imagePath: String
+  publishAt: Datetime
+  expiresAt: Datetime
+  authorId: UUID
+}
+
+type ContentItemsInsertResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [ContentItems!]!
+}
+
+input ContentItemsOrderBy {
+  id: OrderByDirection
+  kind: OrderByDirection
+  slug: OrderByDirection
+  title: OrderByDirection
+  body: OrderByDirection
+  imagePath: OrderByDirection
+  status: OrderByDirection
+  publishAt: OrderByDirection
+  expiresAt: OrderByDirection
+  authorId: OrderByDirection
+  approvedBy: OrderByDirection
+  createdAt: OrderByDirection
+  updatedAt: OrderByDirection
+}
+
+input ContentItemsUpdateInput {
+  kind: ContentKind
+  slug: String
+  title: String
+  body: String
+  imagePath: String
+  publishAt: Datetime
+  expiresAt: Datetime
+}
+
+type ContentItemsUpdateResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [ContentItems!]!
+}
+
+enum ContentKind {
+  announcement
+  quote
+  page
+  activity
+}
+
+"""
+Boolean expression comparing fields on type "ContentKind"
+"""
+input ContentKindFilter {
+  eq: ContentKind
+  in: [ContentKind!]
+  is: FilterIs
+  neq: ContentKind
+}
+
+enum ContentStatus {
+  draft
+  in_review
+  published
+  archived
+}
+
+"""
+Boolean expression comparing fields on type "ContentStatus"
+"""
+input ContentStatusFilter {
+  eq: ContentStatus
+  in: [ContentStatus!]
+  is: FilterIs
+  neq: ContentStatus
+}
+
 """
 An opaque string using for tracking a position in results during pagination
 """
@@ -1001,6 +1148,11 @@ type MembersUpdateResponse {
 
 """The root type for creating and mutating data"""
 type Mutation {
+  approveContent(pId: UUID!): ContentItems
+  approveSermon(pId: UUID!): Sermons
+  archiveContent(pId: UUID!): ContentItems
+  archiveSermon(pId: UUID!): Sermons
+
   """Deletes zero or more records from the `AttendanceCheckins` collection"""
   deleteFromAttendanceCheckinsCollection(
     """Restricts the mutation's impact to records matching the criteria"""
@@ -1050,6 +1202,9 @@ type Mutation {
   """Adds one or more `AttendanceCheckins` records to the collection"""
   insertIntoAttendanceCheckinsCollection(objects: [AttendanceCheckinsInsertInput!]!): AttendanceCheckinsInsertResponse
 
+  """Adds one or more `ContentItems` records to the collection"""
+  insertIntoContentItemsCollection(objects: [ContentItemsInsertInput!]!): ContentItemsInsertResponse
+
   """Adds one or more `Departments` records to the collection"""
   insertIntoDepartmentsCollection(objects: [DepartmentsInsertInput!]!): DepartmentsInsertResponse
 
@@ -1068,6 +1223,9 @@ type Mutation {
   """Adds one or more `Programs` records to the collection"""
   insertIntoProgramsCollection(objects: [ProgramsInsertInput!]!): ProgramsInsertResponse
 
+  """Adds one or more `Sermons` records to the collection"""
+  insertIntoSermonsCollection(objects: [SermonsInsertInput!]!): SermonsInsertResponse
+
   """Adds one or more `Services` records to the collection"""
   insertIntoServicesCollection(objects: [ServicesInsertInput!]!): ServicesInsertResponse
 
@@ -1077,8 +1235,30 @@ type Mutation {
   """Adds one or more `VisitorFollowups` records to the collection"""
   insertIntoVisitorFollowupsCollection(objects: [VisitorFollowupsInsertInput!]!): VisitorFollowupsInsertResponse
   logAuditEvent(pAction: String!, pTableName: String!, pRecordId: UUID, pDetails: JSON): UUID
+  publishContent(pId: UUID!): ContentItems
+  publishSermon(pId: UUID!): Sermons
   recordAttendanceCounts(pServiceId: UUID!, pMen: Int!, pWomen: Int!, pChildren: Int!, pVisitors: Int!): AttendanceCounts
+  returnContentToDraft(pId: UUID!): ContentItems
+  returnSermonToDraft(pId: UUID!): Sermons
   revokeRole(pStaffId: UUID!, pRole: String!, pDepartmentId: UUID): StaffRoles
+  submitContentForReview(pId: UUID!): ContentItems
+  submitSermonForReview(pId: UUID!): Sermons
+
+  """Updates zero or more records in the `ContentItems` collection"""
+  updateContentItemsCollection(
+    """
+    Fields that are set will be updated for all records matching the `filter`
+    """
+    set: ContentItemsUpdateInput!
+
+    """Restricts the mutation's impact to records matching the criteria"""
+    filter: ContentItemsFilter
+
+    """
+    The maximum number of records in the collection permitted to be affected
+    """
+    atMost: Int! = 1
+  ): ContentItemsUpdateResponse!
 
   """Updates zero or more records in the `Departments` collection"""
   updateDepartmentsCollection(
@@ -1143,6 +1323,22 @@ type Mutation {
     """
     atMost: Int! = 1
   ): ProgramsUpdateResponse!
+
+  """Updates zero or more records in the `Sermons` collection"""
+  updateSermonsCollection(
+    """
+    Fields that are set will be updated for all records matching the `filter`
+    """
+    set: SermonsUpdateInput!
+
+    """Restricts the mutation's impact to records matching the criteria"""
+    filter: SermonsFilter
+
+    """
+    The maximum number of records in the collection permitted to be affected
+    """
+    atMost: Int! = 1
+  ): SermonsUpdateResponse!
 
   """Updates zero or more records in the `Services` collection"""
   updateServicesCollection(
@@ -1514,6 +1710,38 @@ type Query {
     orderBy: [AttendanceCountsOrderBy!]
   ): AttendanceCountsConnection!
 
+  """Retrieve a record of type `ContentItems` by its primary key"""
+  contentItemsByPk(
+    """The record's `id` value"""
+    id: UUID!
+  ): ContentItems
+
+  """A pagable collection of type `ContentItems`"""
+  contentItemsCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: ContentItemsFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [ContentItemsOrderBy!]
+  ): ContentItemsConnection!
+
   """Retrieve a record of type `Departments` by its primary key"""
   departmentsByPk(
     """The record's `id` value"""
@@ -1744,6 +1972,38 @@ type Query {
     orderBy: [ProgramsOrderBy!]
   ): ProgramsConnection!
 
+  """Retrieve a record of type `Sermons` by its primary key"""
+  sermonsByPk(
+    """The record's `id` value"""
+    id: UUID!
+  ): Sermons
+
+  """A pagable collection of type `Sermons`"""
+  sermonsCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: SermonsFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [SermonsOrderBy!]
+  ): SermonsConnection!
+
   """Retrieve a record of type `Services` by its primary key"""
   servicesByPk(
     """The record's `id` value"""
@@ -1871,6 +2131,129 @@ type Query {
     """Sort order to apply to the collection"""
     orderBy: [VisitorFollowupsOrderBy!]
   ): VisitorFollowupsConnection!
+}
+
+type Sermons implements Node {
+  """Globally Unique Record Identifier"""
+  nodeId: ID!
+  id: UUID!
+  title: String!
+  preacher: String!
+  preachedOn: Date!
+  series: String
+  scripture: String
+  notes: String
+  videoUrl: String
+  audioPath: String
+  status: ContentStatus!
+  publishAt: Datetime
+  authorId: UUID!
+  approvedBy: UUID
+  createdAt: Datetime!
+  updatedAt: Datetime!
+  authorStaff: Staff
+  approvedByStaff: Staff
+}
+
+type SermonsConnection {
+  edges: [SermonsEdge!]!
+  pageInfo: PageInfo!
+}
+
+type SermonsEdge {
+  cursor: String!
+  node: Sermons!
+}
+
+input SermonsFilter {
+  id: UUIDFilter
+  title: StringFilter
+  preacher: StringFilter
+  preachedOn: DateFilter
+  series: StringFilter
+  scripture: StringFilter
+  notes: StringFilter
+  videoUrl: StringFilter
+  audioPath: StringFilter
+  status: ContentStatusFilter
+  publishAt: DatetimeFilter
+  authorId: UUIDFilter
+  approvedBy: UUIDFilter
+  createdAt: DatetimeFilter
+  updatedAt: DatetimeFilter
+  nodeId: IDFilter
+
+  """
+  Returns true only if all its inner filters are true, otherwise returns false
+  """
+  and: [SermonsFilter!]
+
+  """
+  Returns true if at least one of its inner filters is true, otherwise returns false
+  """
+  or: [SermonsFilter!]
+
+  """Negates a filter"""
+  not: SermonsFilter
+}
+
+input SermonsInsertInput {
+  title: String
+  preacher: String
+  preachedOn: Date
+  series: String
+  scripture: String
+  notes: String
+  videoUrl: String
+  audioPath: String
+  publishAt: Datetime
+  authorId: UUID
+}
+
+type SermonsInsertResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [Sermons!]!
+}
+
+input SermonsOrderBy {
+  id: OrderByDirection
+  title: OrderByDirection
+  preacher: OrderByDirection
+  preachedOn: OrderByDirection
+  series: OrderByDirection
+  scripture: OrderByDirection
+  notes: OrderByDirection
+  videoUrl: OrderByDirection
+  audioPath: OrderByDirection
+  status: OrderByDirection
+  publishAt: OrderByDirection
+  authorId: OrderByDirection
+  approvedBy: OrderByDirection
+  createdAt: OrderByDirection
+  updatedAt: OrderByDirection
+}
+
+input SermonsUpdateInput {
+  title: String
+  preacher: String
+  preachedOn: Date
+  series: String
+  scripture: String
+  notes: String
+  videoUrl: String
+  audioPath: String
+  publishAt: Datetime
+}
+
+type SermonsUpdateResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [Sermons!]!
 }
 
 enum ServiceType {
@@ -2017,6 +2400,30 @@ type Staff implements Node {
   createdAt: Datetime!
   updatedAt: Datetime!
   member: Members
+  approvedContentItemsCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: ContentItemsFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [ContentItemsOrderBy!]
+  ): ContentItemsConnection
   staffRolesCollection(
     """Query the first `n` records in the collection"""
     first: Int
@@ -2161,6 +2568,78 @@ type Staff implements Node {
     """Sort order to apply to the collection"""
     orderBy: [AttendanceCheckinsOrderBy!]
   ): AttendanceCheckinsConnection
+  authoredContentItemsCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: ContentItemsFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [ContentItemsOrderBy!]
+  ): ContentItemsConnection
+  authoredSermonsCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: SermonsFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [SermonsOrderBy!]
+  ): SermonsConnection
+  approvedSermonsCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: SermonsFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [SermonsOrderBy!]
+  ): SermonsConnection
 }
 
 type StaffConnection {
