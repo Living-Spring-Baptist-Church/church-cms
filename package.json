@@ -29,6 +29,7 @@
     "db:stop": "pnpm --filter @lbc/db supabase stop",
     "db:status": "pnpm --filter @lbc/db supabase status",
     "db:reset": "pnpm --filter @lbc/db supabase db reset",
+    "db:seed-local-auth": "node scripts/seed-local-auth.mjs",
     "db:test": "pnpm --filter @lbc/db supabase test db",
     "db:new": "pnpm --filter @lbc/db supabase migration new",
     "prepare": "husky"
