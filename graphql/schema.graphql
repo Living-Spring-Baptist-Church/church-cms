@@ -219,6 +219,24 @@ input IntListFilter {
 """A Javascript Object Notation value serialized as a string"""
 scalar JSON
 
+enum MemberStatus {
+  visitor
+  active
+  inactive
+  transferred
+  deceased
+}
+
+"""
+Boolean expression comparing fields on type "MemberStatus"
+"""
+input MemberStatusFilter {
+  eq: MemberStatus
+  in: [MemberStatus!]
+  is: FilterIs
+  neq: MemberStatus
+}
+
 interface Node {
   """Retrieves a record by `ID`"""
   nodeId: ID!
