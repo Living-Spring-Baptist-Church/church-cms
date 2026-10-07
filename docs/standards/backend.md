@@ -71,6 +71,8 @@ Every table, in the migration that creates it:
 - Money as `amount_minor bigint` + `currency char(3)`, with `check (amount_minor > 0)` and a `direction` where relevant
 - `alter table ... enable row level security;` plus explicit policies for each role in the PRD permission matrix
 - The audit trigger: `create trigger audit_<table> after insert or update or delete on public.<table> for each row execute function audit.record_change();` then `alter table public.<table> enable always trigger audit_<table>;` so `session_replication_role = replica` cannot skip it
+- A single `id` column even on link tables (for example `member_departments`, with `unique (member_id, department_id)`): `audit.record_change()` reads `id` from the row, so a composite primary key without `id` cannot be audited
+- Relationship names in GraphQL: every foreign key gets a `comment on constraint ... is e'@graphql({"foreign_name": "...", "local_name": "..."})'`. The `foreign_name` must differ from the inflected name of the foreign key column itself (`assigned_to` is `assignedTo`, so its relationship is `assignedStaff`), otherwise both fields share a name. List every field of the type in a pgTAP test to catch it.
 - Indexes on every foreign key and on columns used in common filters
 - `comment on table` and `comment on column` for anything exposed. These become the GraphQL API documentation.
 
@@ -127,7 +129,8 @@ raise exception using
 
 - Least privilege: revoke default privileges on each schema from `anon` and `authenticated`, then grant only what each needs. `anon` can read published content and nothing else.
 - Every policy is tested from both sides: the allowed role succeeds, every other role is denied.
-- Children's records (under the age of majority) are visible only to super admin, pastor and children's ministry leads.
+- Children's records (under the age of majority) are visible only to super admin, pastor and children's ministry leads (the latter only for members of the department they head). `private.is_minor(date_of_birth)` treats an unknown date of birth as a minor, so unknown ages are hidden.
+- A view that exposes part of a protected table to roles with no policy on it (`member_names`) runs with its owner's rights, so it must check the caller's role inside its own `where`, be created `with (security_barrier = true)` so a caller's condition cannot leak filtered rows through an error message, be granted to `authenticated` only, and carry the `@graphql({"primary_key_columns": [...]})` comment to appear in GraphQL.
 - The service role key lives only in edge function secrets. It never appears in either Next.js app, in Git, or in logs.
 - Input from users is validated in the function even though the frontend validated it too.
 
