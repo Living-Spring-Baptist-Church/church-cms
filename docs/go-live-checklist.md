@@ -20,7 +20,9 @@ Everything here must be true **before any real member, child or financial data i
   - [ ] Refresh token rotation is on
   - [ ] JWT expiry is set deliberately (short)
   - [ ] Auth rate limits are reviewed (sign-in, token refresh, email)
-- [ ] **Database-side two-factor (aal2) enforcement is done (Dev, LBC-41).** It can wait while data is dummy; real data must not.
+- [x] **Database-side two-factor (aal2) enforcement is done (Dev, LBC-41).** Done in migration `20261008090000_enforce_mfa_for_privileged_roles.sql`: super admin, pastor and treasurer hold no role in the database below aal2. Before real data, re-check on the hosted project that `private.mfa_required_roles()` matches the PRD and that the hosted access token carries the `aal` claim (sign in as a pastor without a code and confirm `membersCollection` returns nothing).
+- [ ] **First enrolment is done with the person present (Owner).** The first sign in of each super admin, pastor and treasurer account is protected only by its password, because there is no authenticator yet (after that, GoTrue refuses a second one without a code). Create each of these accounts, enrol its authenticator with the person present, and only then enter real data. The same applies when a role that requires two-factor is granted to an existing person who has none: they can enrol their own authenticator at password-only level, so do it together.
+- [ ] **Token lifetime reviewed (Owner).** Role changes and deactivation take effect at once, but signing out or removing an authenticator does not revoke an access token already issued: it works until it expires (`jwt_expiry`, 3600 s by default). Choose the expiry deliberately and accept or shorten that window.
 - [ ] **Hosted `pg_cron` job verified.** `cron.job` lists the content expiry job and `cron.job_run_details` shows successful runs on the hosted project.
 - [ ] `pg_cron` run history is purged on a schedule so `cron.job_run_details` does not grow without limit.
 - [ ] **REST exposure.** PostgREST exposes `public` with `max_rows` 1000: confirm `max_rows` is deliberate. The `private` and `audit` schemas stay out of the exposed schemas.

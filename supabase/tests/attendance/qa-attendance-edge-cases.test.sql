@@ -17,7 +17,7 @@ declare
   v_detail text;
 begin
   begin
-    perform set_config('request.jwt.claims', json_build_object('role', p_role, 'sub', p_sub)::text, true);
+    perform set_config('request.jwt.claims', json_build_object('aal', 'aal2', 'role', p_role, 'sub', p_sub)::text, true);
     perform set_config('role', p_role, true);
     execute p_stmt;
     get diagnostics v_rows = row_count;
@@ -42,7 +42,7 @@ declare
   v_count bigint;
 begin
   begin
-    perform set_config('request.jwt.claims', json_build_object('role', 'authenticated', 'sub', p_sub)::text, true);
+    perform set_config('request.jwt.claims', json_build_object('aal', 'aal2', 'role', 'authenticated', 'sub', p_sub)::text, true);
     perform set_config('role', 'authenticated', true);
     execute 'select count(*) from (' || p_statement || ') as visible_rows' into v_count;
     raise exception using errcode = 'QAUND';
@@ -183,7 +183,7 @@ declare
 begin
   begin
     perform set_config('TimeZone', p_time_zone, true);
-    perform set_config('request.jwt.claims', '{"role":"authenticated","sub":"10000000-0000-4000-8000-000000000004"}', true);
+    perform set_config('request.jwt.claims', '{"aal":"aal2","role":"authenticated","sub":"10000000-0000-4000-8000-000000000004"}', true);
     perform set_config('role', 'authenticated', true);
     perform public.generate_recurring_services(
       '[{"name":"Tz First","type":"sunday","weekday":7,"time":"08:00"},{"name":"Tz Second","type":"sunday","weekday":7,"time":"10:30"},{"name":"Tz Study","type":"midweek","weekday":3,"time":"18:00"},{"name":"Tz Late","type":"midweek","weekday":1,"time":"23:59"}]'::jsonb, 8);
@@ -210,10 +210,10 @@ select is((select count(*) from regexp_matches(pg_temp.generated_instants('Etc/G
 create temp table audit_mark (id bigint);
 insert into audit_mark select coalesce(max(id), 0) from audit.log;
 
-select set_config('request.jwt.claims', '{"role":"authenticated","sub":"10000000-0000-4000-8000-000000000005"}', true);
+select set_config('request.jwt.claims', '{"aal":"aal2","role":"authenticated","sub":"10000000-0000-4000-8000-000000000005"}', true);
 set local role authenticated;
 select public.record_attendance_counts('b1000000-0000-4000-8000-000000000004', 10, 20, 5, 1);
-select set_config('request.jwt.claims', '{"role":"authenticated","sub":"10000000-0000-4000-8000-000000000004"}', true);
+select set_config('request.jwt.claims', '{"aal":"aal2","role":"authenticated","sub":"10000000-0000-4000-8000-000000000004"}', true);
 select public.record_attendance_counts('b1000000-0000-4000-8000-000000000004', 11, 20, 5, 1);
 reset role;
 select set_config('request.jwt.claims', '', true);

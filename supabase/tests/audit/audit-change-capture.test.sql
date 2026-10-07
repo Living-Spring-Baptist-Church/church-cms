@@ -16,7 +16,7 @@ declare
   v_original name := current_user;
   v_rows bigint;
 begin
-  perform set_config('request.jwt.claims', json_build_object('role', p_db_role, 'sub', p_staff_id)::text, true);
+  perform set_config('request.jwt.claims', json_build_object('aal', 'aal2', 'role', p_db_role, 'sub', p_staff_id)::text, true);
   perform set_config('role', p_db_role::text, true);
   execute p_statement;
   get diagnostics v_rows = row_count;

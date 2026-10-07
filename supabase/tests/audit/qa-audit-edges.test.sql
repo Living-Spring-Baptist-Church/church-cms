@@ -12,7 +12,7 @@ returns void
 language plpgsql
 as $$
 begin
-  perform set_config('request.jwt.claims', json_build_object('role', p_db_role, 'sub', p_user_id)::text, true);
+  perform set_config('request.jwt.claims', json_build_object('aal', 'aal2', 'role', p_db_role, 'sub', p_user_id)::text, true);
   perform set_config('role', p_db_role::text, true);
 end;
 $$;
