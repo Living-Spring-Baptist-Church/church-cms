@@ -20,9 +20,11 @@ import { fetchStaffProfile } from "@core/services/staff/staff.service";
 export type CookieAccess = "read_only" | "writable";
 
 export async function createRequestAuth(access: CookieAccess): Promise<AuthPort> {
-  const { supabaseUrl, supabaseAnonKey } = readPublicEnv(process.env);
+  // Request-time APIs first: they stop prerendering, so `next build` never reads the environment
+  // for a page that needs a signed-in user. A request without the variables still fails loudly.
   const cookieJar = await cookies();
   const requestHeaders = await headers();
+  const { supabaseUrl, supabaseAnonKey } = readPublicEnv(process.env);
   return createSupabaseAuth({
     supabaseUrl,
     anonKey: supabaseAnonKey,

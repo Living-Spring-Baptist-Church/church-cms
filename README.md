@@ -138,7 +138,7 @@ The dashboard signs staff in with email and password, then a six digit code from
 pnpm db:start -x realtime,storage-api,imgproxy,mailpit,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
 ```
 
-Put the local URL and anon key from `pnpm db:status` in `apps/dashboard/.env.local`, then `pnpm --filter @lbc/dashboard dev`. `next build` of the dashboard also needs `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` in the environment, because the app reads them when it starts. Authenticator codes need a real authenticator app (or any RFC 6238 SHA-1, 6 digit, 30 second generator) fed with the setup key.
+Put the local URL and anon key from `pnpm db:status` in `apps/dashboard/.env.local`, then `pnpm --filter @lbc/dashboard dev`. The dashboard needs `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` at runtime: a request without them fails loudly. `next build` does not need them, because every page that reads them is rendered per request and never prerendered. Authenticator codes need a real authenticator app (or any RFC 6238 SHA-1, 6 digit, 30 second generator) fed with the setup key.
 
 ### Hosted Auth settings (set in the Supabase dashboard)
 
