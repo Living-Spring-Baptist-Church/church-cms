@@ -2,7 +2,7 @@ import type { ComponentProps } from "react";
 
 import { cn } from "#helpers/cn.utils";
 
-type CardTitleElement = "h2" | "h3" | "h4";
+type CardTitleElement = "h1" | "h2" | "h3" | "h4";
 
 export type CardTitleProps = ComponentProps<"h3"> & {
   /** Heading level that fits the page outline. Defaults to h3. */
