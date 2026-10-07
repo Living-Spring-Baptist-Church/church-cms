@@ -37,7 +37,7 @@ declare
   v_db_role name := case p_label when 'anon' then 'anon' else 'authenticated' end;
   v_rows bigint;
 begin
-  perform set_config('request.jwt.claims', json_build_object('role', v_db_role, 'sub', (select staff_id from actors where label = p_label))::text, true);
+  perform set_config('request.jwt.claims', json_build_object('aal', 'aal2', 'role', v_db_role, 'sub', (select staff_id from actors where label = p_label))::text, true);
   perform set_config('role', v_db_role::text, true);
   execute p_statement;
   get diagnostics v_rows = row_count;
@@ -64,7 +64,7 @@ declare
   v_db_role name := case p_label when 'anon' then 'anon' else 'authenticated' end;
   v_seen text;
 begin
-  perform set_config('request.jwt.claims', json_build_object('role', v_db_role, 'sub', (select staff_id from actors where label = p_label))::text, true);
+  perform set_config('request.jwt.claims', json_build_object('aal', 'aal2', 'role', v_db_role, 'sub', (select staff_id from actors where label = p_label))::text, true);
   perform set_config('role', v_db_role::text, true);
   execute format('select coalesce(string_agg(%1$I::text, %2$L order by %1$I::text), %3$L) from %4$s', p_column, ',', '', p_relation) into v_seen;
   perform set_config('role', v_original::text, true);
@@ -82,7 +82,7 @@ declare
   v_db_role name := case p_label when 'anon' then 'anon' else 'authenticated' end;
   v_result jsonb;
 begin
-  perform set_config('request.jwt.claims', json_build_object('role', v_db_role, 'sub', (select staff_id from actors where label = p_label))::text, true);
+  perform set_config('request.jwt.claims', json_build_object('aal', 'aal2', 'role', v_db_role, 'sub', (select staff_id from actors where label = p_label))::text, true);
   perform set_config('role', v_db_role::text, true);
   v_result := graphql.resolve(p_query);
   perform set_config('role', v_original::text, true);

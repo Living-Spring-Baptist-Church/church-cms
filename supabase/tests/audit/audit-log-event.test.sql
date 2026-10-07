@@ -14,7 +14,7 @@ declare
   v_original name := current_user;
   v_result text;
 begin
-  perform set_config('request.jwt.claims', json_build_object('role', p_db_role, 'sub', p_user_id)::text, true);
+  perform set_config('request.jwt.claims', json_build_object('aal', 'aal2', 'role', p_db_role, 'sub', p_user_id)::text, true);
   perform set_config('role', p_db_role::text, true);
   execute p_statement into v_result;
   perform set_config('role', v_original::text, true);
@@ -45,7 +45,7 @@ declare
   v_original name := current_user;
   v_result jsonb;
 begin
-  perform set_config('request.jwt.claims', json_build_object('role', p_db_role, 'sub', p_user_id)::text, true);
+  perform set_config('request.jwt.claims', json_build_object('aal', 'aal2', 'role', p_db_role, 'sub', p_user_id)::text, true);
   perform set_config('role', p_db_role::text, true);
   v_result := graphql.resolve(p_query);
   perform set_config('role', v_original::text, true);

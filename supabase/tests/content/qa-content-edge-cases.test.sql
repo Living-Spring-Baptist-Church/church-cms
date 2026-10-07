@@ -18,7 +18,7 @@ declare
   v_result text;
 begin
   begin
-    perform set_config('request.jwt.claims', json_build_object('role', v_db_role, 'sub', nullif(p_sub, 'anon'))::text, true);
+    perform set_config('request.jwt.claims', json_build_object('aal', 'aal2', 'role', v_db_role, 'sub', nullif(p_sub, 'anon'))::text, true);
     perform set_config('role', v_db_role, true);
     execute p_statement;
     get diagnostics v_rows = row_count;
@@ -61,7 +61,7 @@ declare
   v_db_role text := case when p_sub = 'anon' then 'anon' else 'authenticated' end;
   v_result jsonb;
 begin
-  perform set_config('request.jwt.claims', json_build_object('role', v_db_role, 'sub', nullif(p_sub, 'anon'))::text, true);
+  perform set_config('request.jwt.claims', json_build_object('aal', 'aal2', 'role', v_db_role, 'sub', nullif(p_sub, 'anon'))::text, true);
   perform set_config('role', v_db_role, true);
   v_result := graphql.resolve(p_query);
   perform set_config('role', 'postgres', true);
@@ -75,7 +75,7 @@ language plpgsql
 as $$
 begin
   begin
-    perform set_config('request.jwt.claims', json_build_object('role', 'authenticated', 'sub', p_sub)::text, true);
+    perform set_config('request.jwt.claims', json_build_object('aal', 'aal2', 'role', 'authenticated', 'sub', p_sub)::text, true);
     perform set_config('role', 'authenticated', true);
     execute format('select public.%I(%L)', p_function, p_id);
     perform set_config('role', 'postgres', true);

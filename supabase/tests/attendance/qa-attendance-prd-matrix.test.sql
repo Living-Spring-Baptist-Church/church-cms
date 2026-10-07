@@ -51,7 +51,7 @@ create function pg_temp.probe(p_sub uuid, p_role text, p_stmt text) returns text
 declare v text; n bigint;
 begin
   begin
-    perform set_config('request.jwt.claims', json_build_object('role',p_role,'sub',p_sub)::text, true);
+    perform set_config('request.jwt.claims', json_build_object('aal', 'aal2', 'role',p_role,'sub',p_sub)::text, true);
     perform set_config('role', p_role, true);
     execute p_stmt;
     get diagnostics n = row_count;

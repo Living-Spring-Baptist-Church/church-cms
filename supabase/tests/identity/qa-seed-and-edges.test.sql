@@ -47,7 +47,7 @@ select is(
 
 -- Helper functions with edge inputs, evaluated as a signed-in super admin.
 
-select set_config('request.jwt.claims', json_build_object('role', 'authenticated', 'sub', '10000000-0000-4000-8000-000000000001')::text, true);
+select set_config('request.jwt.claims', json_build_object('aal', 'aal2', 'role', 'authenticated', 'sub', '10000000-0000-4000-8000-000000000001')::text, true);
 
 select is(private.has_role(null), false, 'should return false, not null, when has_role gets null');
 select is(private.has_any_role(null), false, 'should return false when has_any_role gets null');
@@ -62,7 +62,7 @@ select is(private.is_active_staff(), false, 'should return false for is_active_s
 
 -- Department head over several departments.
 
-select set_config('request.jwt.claims', json_build_object('role', 'authenticated', 'sub', '10000000-0000-4000-8000-000000000001')::text, true);
+select set_config('request.jwt.claims', json_build_object('aal', 'aal2', 'role', 'authenticated', 'sub', '10000000-0000-4000-8000-000000000001')::text, true);
 select set_config('role', 'authenticated', true);
 
 select is(
@@ -72,7 +72,7 @@ select is(
 );
 
 reset role;
-select set_config('request.jwt.claims', json_build_object('role', 'authenticated', 'sub', '10000000-0000-4000-8000-000000000006')::text, true);
+select set_config('request.jwt.claims', json_build_object('aal', 'aal2', 'role', 'authenticated', 'sub', '10000000-0000-4000-8000-000000000006')::text, true);
 
 select is(private.heads_department('20000000-0000-4000-8000-000000000001'), true, 'should still head the first department');
 select is(private.heads_department('20000000-0000-4000-8000-000000000003'), true, 'should head the second department');
@@ -81,7 +81,7 @@ select is(private.has_role('department_head'), true, 'should hold department_hea
 
 -- grant_role result shape and unicode department names, as super admin.
 
-select set_config('request.jwt.claims', json_build_object('role', 'authenticated', 'sub', '10000000-0000-4000-8000-000000000001')::text, true);
+select set_config('request.jwt.claims', json_build_object('aal', 'aal2', 'role', 'authenticated', 'sub', '10000000-0000-4000-8000-000000000001')::text, true);
 select set_config('role', 'authenticated', true);
 
 create temp table granted_row as
@@ -112,7 +112,7 @@ reset role;
 
 -- A non super admin cannot change staff columns even on their own row.
 
-select set_config('request.jwt.claims', json_build_object('role', 'authenticated', 'sub', '10000000-0000-4000-8000-000000000002')::text, true);
+select set_config('request.jwt.claims', json_build_object('aal', 'aal2', 'role', 'authenticated', 'sub', '10000000-0000-4000-8000-000000000002')::text, true);
 select set_config('role', 'authenticated', true);
 
 update public.staff set full_name = 'Renamed' where id = '10000000-0000-4000-8000-000000000002';

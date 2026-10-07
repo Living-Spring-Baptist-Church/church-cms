@@ -16,7 +16,7 @@ create function pg_temp.claim_as(p_staff_id uuid)
 returns text
 language sql
 as $$
-  select set_config('request.jwt.claims', json_build_object('sub', p_staff_id, 'role', 'authenticated')::text, true);
+  select set_config('request.jwt.claims', json_build_object('aal', 'aal2', 'sub', p_staff_id, 'role', 'authenticated')::text, true);
 $$;
 
 insert into auth.users (id, aud, role, email)
