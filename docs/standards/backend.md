@@ -88,6 +88,8 @@ Every table, in the migration that creates it:
 - pg_graphql exposes parameters with their `p_` prefix (`pServiceId`, `pMen`), so the frontend calls `recordAttendanceCounts(pServiceId: ...)`. A function that returns a set (`setof`) is run more than once by pg_graphql, which breaks any write: a mutation returns one row (`returns public.<table>`) or a scalar such as a count, never a set.
 - A write function that nobody may reach through the table (no insert or update grant, as for `attendance_counts`) is the only write path, so its role check is the gate: check the role first, then validate, then look the record up.
 - No dynamic SQL. If ever unavoidable, only with `format('%I', ...)` / `%L`, never string concatenation.
+- A SQL function body is resolved when it runs, so a helper that a `CHECK` constraint calls and that itself calls another `private` function must be `security definer` (with `set search_path = ''`): the writing role has no USAGE on `private`. A constraint that calls a `private` function directly needs only EXECUTE on it (see `max_headcount`).
+- A status flow is defined once in a `private` function that returns the next status or raises (`private.next_content_status`), and a `before update of status` trigger refuses any other move, so no path can skip a step or bring an archived item back. Columns only a workflow may write (`status`, `approved_by`) have no column grant for app roles, and the function is `security definer` with the role check first.
 
 ## 6. No magic values in SQL
 
@@ -121,7 +123,7 @@ raise exception using
 | `FINANCE_SELF_APPROVAL` | Approver is the requester |
 | `FINANCE_SAME_COUNTER` | Second cash counter is the first counter |
 | `FINANCE_ALREADY_REVERSED` | Ledger entry was already reversed |
-| `CONTENT_NOT_APPROVED` | Publishing without required approval |
+| `CONTENT_NOT_APPROVED` | Publishing an item that a pastor or super admin has not approved, by a role that cannot approve (`publish_content`, `publish_sermon`) |
 | `STAFF_LAST_SUPER_ADMIN` | Change would leave the system with no active super admin |
 | `STAFF_INACTIVE` | Target staff member is deactivated (for example granting them a role) |
 | `STAFF_ROLE_ALREADY_GRANTED` | Staff member already holds this role (for this department) |
@@ -130,6 +132,7 @@ raise exception using
 ## 8. Security
 
 - Least privilege: revoke default privileges on each schema from `anon` and `authenticated`, then grant only what each needs. `anon` can read published content and nothing else.
+- The public read rule (LBC-33, first anon-readable data): `anon` gets column level `SELECT` on the public columns only (never author, approver, status or timestamps), and one policy per table: `status = 'published' and publish_at <= now()` (and `expires_at is null or expires_at > now()` where the table has it). `now()` is the transaction time, so scheduling and expiry take effect at once with no job, and a null `publish_at` is never visible. A scheduled item is `published` with a future `publish_at`: there is no `scheduled` status. A `CHECK` requires `publish_at` and `approved_by` on every published row. Tests prove each hidden state, the boundaries at `now()` and that the session time zone changes nothing. Any new anon grant needs this same treatment and a test of every hidden column, relationship, filter and ordering.
 - Every policy is tested from both sides: the allowed role succeeds, every other role is denied.
 - Children's records (under the age of majority) are visible only to super admin, pastor and children's ministry leads (the latter only for members of the department they head). `private.is_minor(date_of_birth)` treats an unknown date of birth as a minor, so unknown ages are hidden.
 - A view that exposes part of a protected table to roles with no policy on it (`member_names`) runs with its owner's rights, so it must check the caller's role inside its own `where`, be created `with (security_barrier = true)` so a caller's condition cannot leak filtered rows through an error message, be granted to `authenticated` only, and carry the `@graphql({"primary_key_columns": [...]})` comment to appear in GraphQL.
@@ -151,6 +154,7 @@ raise exception using
 - One test file per domain topic: `supabase/tests/finance/ledger-reversal.test.sql`. Cross-cutting schema checks live in `supabase/tests/structure/`.
 - Descriptions read as BDD: `'should reject an offering when the period is closed'`.
 - Tests run as a specific role by setting the JWT claims helper, never as the database owner, so RLS is really exercised.
+- A setup statement in a test file must not print a result that looks like a TAP line (`ok 1`): wrap it in a `void` helper. A refused statement is asserted through a helper that returns `<sqlstate> <message>`, so the exact failure is checked, not just that something failed.
 - Every policy: allowed and denied cases for each role touched.
 - Every finance rule: the success case and every failure case (closed period, self-approval, same counter, double reversal, deposit not counted as income).
 - A structural test fails if any `public` table lacks RLS, policies or a complete audit trigger (row-level AFTER INSERT OR UPDATE OR DELETE running `audit.record_change()`, enabled for normal sessions). It is `supabase/tests/structure/public-tables-security.test.sql`. `audit.log` immutability (UPDATE, DELETE and TRUNCATE refused for every role) is tested in `supabase/tests/audit/`.
@@ -160,6 +164,7 @@ raise exception using
 
 - Handler (`index.ts`) is thin: parse and validate input with Zod, call the service, return a response. No logic in the handler.
 - Jobs are idempotent: running twice never sends a message twice or double-publishes. Use row status transitions (`queued` to `sent`) guarded in SQL.
+- Database jobs (pg_cron, extension created with `create extension if not exists pg_cron with schema pg_catalog`): the logic is a plain function in `private` that returns a count, with no execute grant to any app role, so pgTAP can run it directly; the migration then calls `cron.schedule('<job-name>', '<schedule>', 'select private.<function>()')`, which updates the job of that name instead of adding a second. The job name and schedule are `private` constants. The job runs as the migration owner with no signed-in user, so its audit rows have a null `actor_id`. Visibility rules never depend on a job: a job only keeps stored statuses truthful (`private.archive_expired_content`). The test checks the `cron.job` row (name, schedule, command, user) and runs the stored command.
 - Batch reads and writes; never one query per row.
 - Providers: one interface per capability, one free demo implementation that writes to the outbox or logs, and a test. A real vendor implementation is added only after the church approves the cost, recorded in an ADR.
 
