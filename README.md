@@ -124,6 +124,8 @@ The client is urql (ADR-015). `apps/dashboard/src/config/graphql-client.ts` send
 
 The `gitleaks-action` is not used: it needs a paid license key for organisation repositories.
 
+`pnpm-workspace.yaml` carries two `overrides` (`sharp` 0.35.5, `source-map-js` 1.2.2). Both are transitive dependencies of the pinned Next.js 16.3.6 that had high advisories (GHSA-wq5f-xc86-pv6w and GHSA-68fv-2mgg-jv7q), and the `Dependency audit` job fails on high advisories. They are patch bumps inside the ranges Next declares (`sharp` `^0.35.4`). Remove the overrides once Next ships patched dependencies, and re-check them on every Next upgrade.
+
 ### RLS and audit structure check
 
 `supabase/tests/structure/public-tables-security.test.sql` runs inside `pnpm db:test`, locally and in CI. It fails if any table in `public` has row level security disabled (`RLS_DISABLED`), has no policy (`NO_POLICIES`) or has no enabled audit trigger (`NO_AUDIT_TRIGGER`). A table counts as audited only when it has a complete audit trigger: a row-level AFTER trigger that runs `audit.record_change()`, covers INSERT, UPDATE and DELETE, has no `UPDATE OF` column list or `WHEN` condition, and is enabled for normal sessions (`ENABLE` or `ENABLE ALWAYS`; replica-only and disabled triggers do not count). The audit part is always on: the test also fails if `audit.record_change()` itself is missing. The same file proves each failure with probe tables that are rolled back. The `audit.log` tests (grants, immutability for every role, the LOGIN and EXPORT entry point) are in `supabase/tests/audit/`.
