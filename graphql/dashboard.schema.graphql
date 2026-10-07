@@ -1,0 +1,2478 @@
+enum AppRole {
+  super_admin
+  pastor
+  treasurer
+  secretary
+  usher
+  department_head
+  content_editor
+}
+
+"""
+Boolean expression comparing fields on type "AppRole"
+"""
+input AppRoleFilter {
+  eq: AppRole
+  in: [AppRole!]
+  is: FilterIs
+  neq: AppRole
+}
+
+type AttendanceCheckins implements Node {
+  """Globally Unique Record Identifier"""
+  nodeId: ID!
+  id: UUID!
+  serviceId: UUID!
+  memberId: UUID!
+  checkedInBy: UUID!
+  checkedInAt: Datetime!
+  service: Services
+  member: Members
+  checkedInByStaff: Staff
+}
+
+type AttendanceCheckinsConnection {
+  edges: [AttendanceCheckinsEdge!]!
+  pageInfo: PageInfo!
+}
+
+type AttendanceCheckinsDeleteResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [AttendanceCheckins!]!
+}
+
+type AttendanceCheckinsEdge {
+  cursor: String!
+  node: AttendanceCheckins!
+}
+
+input AttendanceCheckinsFilter {
+  id: UUIDFilter
+  serviceId: UUIDFilter
+  memberId: UUIDFilter
+  checkedInBy: UUIDFilter
+  checkedInAt: DatetimeFilter
+  nodeId: IDFilter
+
+  """
+  Returns true only if all its inner filters are true, otherwise returns false
+  """
+  and: [AttendanceCheckinsFilter!]
+
+  """
+  Returns true if at least one of its inner filters is true, otherwise returns false
+  """
+  or: [AttendanceCheckinsFilter!]
+
+  """Negates a filter"""
+  not: AttendanceCheckinsFilter
+}
+
+input AttendanceCheckinsInsertInput {
+  serviceId: UUID
+  memberId: UUID
+  checkedInBy: UUID
+}
+
+type AttendanceCheckinsInsertResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [AttendanceCheckins!]!
+}
+
+input AttendanceCheckinsOrderBy {
+  id: OrderByDirection
+  serviceId: OrderByDirection
+  memberId: OrderByDirection
+  checkedInBy: OrderByDirection
+  checkedInAt: OrderByDirection
+}
+
+type AttendanceCounts implements Node {
+  """Globally Unique Record Identifier"""
+  nodeId: ID!
+  id: UUID!
+  serviceId: UUID!
+  men: Int!
+  women: Int!
+  children: Int!
+  visitors: Int!
+  recordedBy: UUID!
+  createdAt: Datetime!
+  updatedAt: Datetime!
+  service: Services
+  recordedByStaff: Staff
+}
+
+type AttendanceCountsConnection {
+  edges: [AttendanceCountsEdge!]!
+  pageInfo: PageInfo!
+}
+
+type AttendanceCountsEdge {
+  cursor: String!
+  node: AttendanceCounts!
+}
+
+input AttendanceCountsFilter {
+  id: UUIDFilter
+  serviceId: UUIDFilter
+  men: IntFilter
+  women: IntFilter
+  children: IntFilter
+  visitors: IntFilter
+  recordedBy: UUIDFilter
+  createdAt: DatetimeFilter
+  updatedAt: DatetimeFilter
+  nodeId: IDFilter
+
+  """
+  Returns true only if all its inner filters are true, otherwise returns false
+  """
+  and: [AttendanceCountsFilter!]
+
+  """
+  Returns true if at least one of its inner filters is true, otherwise returns false
+  """
+  or: [AttendanceCountsFilter!]
+
+  """Negates a filter"""
+  not: AttendanceCountsFilter
+}
+
+input AttendanceCountsOrderBy {
+  id: OrderByDirection
+  serviceId: OrderByDirection
+  men: OrderByDirection
+  women: OrderByDirection
+  children: OrderByDirection
+  visitors: OrderByDirection
+  recordedBy: OrderByDirection
+  createdAt: OrderByDirection
+  updatedAt: OrderByDirection
+}
+
+"""A high precision floating point value represented as a string"""
+scalar BigFloat
+
+"""
+Boolean expression comparing fields on type "BigFloat"
+"""
+input BigFloatFilter {
+  eq: BigFloat
+  gt: BigFloat
+  gte: BigFloat
+  in: [BigFloat!]
+  is: FilterIs
+  lt: BigFloat
+  lte: BigFloat
+  neq: BigFloat
+}
+
+"""
+Boolean expression comparing fields on type "BigFloatList"
+"""
+input BigFloatListFilter {
+  containedBy: [BigFloat!]
+  contains: [BigFloat!]
+  eq: [BigFloat!]
+  is: FilterIs
+  overlaps: [BigFloat!]
+}
+
+"""An arbitrary size integer represented as a string"""
+scalar BigInt
+
+"""
+Boolean expression comparing fields on type "BigInt"
+"""
+input BigIntFilter {
+  eq: BigInt
+  gt: BigInt
+  gte: BigInt
+  in: [BigInt!]
+  is: FilterIs
+  lt: BigInt
+  lte: BigInt
+  neq: BigInt
+}
+
+"""
+Boolean expression comparing fields on type "BigIntList"
+"""
+input BigIntListFilter {
+  containedBy: [BigInt!]
+  contains: [BigInt!]
+  eq: [BigInt!]
+  is: FilterIs
+  overlaps: [BigInt!]
+}
+
+"""
+Boolean expression comparing fields on type "Boolean"
+"""
+input BooleanFilter {
+  eq: Boolean
+  is: FilterIs
+}
+
+"""
+Boolean expression comparing fields on type "BooleanList"
+"""
+input BooleanListFilter {
+  containedBy: [Boolean!]
+  contains: [Boolean!]
+  eq: [Boolean!]
+  is: FilterIs
+  overlaps: [Boolean!]
+}
+
+"""
+An opaque string using for tracking a position in results during pagination
+"""
+scalar Cursor
+
+"""A date without time information"""
+scalar Date
+
+"""
+Boolean expression comparing fields on type "Date"
+"""
+input DateFilter {
+  eq: Date
+  gt: Date
+  gte: Date
+  in: [Date!]
+  is: FilterIs
+  lt: Date
+  lte: Date
+  neq: Date
+}
+
+"""
+Boolean expression comparing fields on type "DateList"
+"""
+input DateListFilter {
+  containedBy: [Date!]
+  contains: [Date!]
+  eq: [Date!]
+  is: FilterIs
+  overlaps: [Date!]
+}
+
+"""A date and time"""
+scalar Datetime
+
+"""
+Boolean expression comparing fields on type "Datetime"
+"""
+input DatetimeFilter {
+  eq: Datetime
+  gt: Datetime
+  gte: Datetime
+  in: [Datetime!]
+  is: FilterIs
+  lt: Datetime
+  lte: Datetime
+  neq: Datetime
+}
+
+"""
+Boolean expression comparing fields on type "DatetimeList"
+"""
+input DatetimeListFilter {
+  containedBy: [Datetime!]
+  contains: [Datetime!]
+  eq: [Datetime!]
+  is: FilterIs
+  overlaps: [Datetime!]
+}
+
+type Departments implements Node {
+  """Globally Unique Record Identifier"""
+  nodeId: ID!
+  id: UUID!
+  name: String!
+  isChildrensMinistry: Boolean!
+  archivedAt: Datetime
+  staffRolesCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: StaffRolesFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [StaffRolesOrderBy!]
+  ): StaffRolesConnection
+  memberDepartmentsCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: MemberDepartmentsFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [MemberDepartmentsOrderBy!]
+  ): MemberDepartmentsConnection
+  programsCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: ProgramsFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [ProgramsOrderBy!]
+  ): ProgramsConnection
+}
+
+type DepartmentsConnection {
+  edges: [DepartmentsEdge!]!
+  pageInfo: PageInfo!
+}
+
+type DepartmentsEdge {
+  cursor: String!
+  node: Departments!
+}
+
+input DepartmentsFilter {
+  id: UUIDFilter
+  name: StringFilter
+  isChildrensMinistry: BooleanFilter
+  archivedAt: DatetimeFilter
+  nodeId: IDFilter
+
+  """
+  Returns true only if all its inner filters are true, otherwise returns false
+  """
+  and: [DepartmentsFilter!]
+
+  """
+  Returns true if at least one of its inner filters is true, otherwise returns false
+  """
+  or: [DepartmentsFilter!]
+
+  """Negates a filter"""
+  not: DepartmentsFilter
+}
+
+input DepartmentsInsertInput {
+  name: String
+  isChildrensMinistry: Boolean
+}
+
+type DepartmentsInsertResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [Departments!]!
+}
+
+input DepartmentsOrderBy {
+  id: OrderByDirection
+  name: OrderByDirection
+  isChildrensMinistry: OrderByDirection
+  archivedAt: OrderByDirection
+}
+
+input DepartmentsUpdateInput {
+  name: String
+  isChildrensMinistry: Boolean
+  archivedAt: Datetime
+}
+
+type DepartmentsUpdateResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [Departments!]!
+}
+
+enum FilterIs {
+  NULL
+  NOT_NULL
+}
+
+"""
+Boolean expression comparing fields on type "Float"
+"""
+input FloatFilter {
+  eq: Float
+  gt: Float
+  gte: Float
+  in: [Float!]
+  is: FilterIs
+  lt: Float
+  lte: Float
+  neq: Float
+}
+
+"""
+Boolean expression comparing fields on type "FloatList"
+"""
+input FloatListFilter {
+  containedBy: [Float!]
+  contains: [Float!]
+  eq: [Float!]
+  is: FilterIs
+  overlaps: [Float!]
+}
+
+type Households implements Node {
+  """Globally Unique Record Identifier"""
+  nodeId: ID!
+  id: UUID!
+  name: String!
+  address: String
+  createdAt: Datetime!
+  updatedAt: Datetime!
+  archivedAt: Datetime
+  membersCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: MembersFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [MembersOrderBy!]
+  ): MembersConnection
+}
+
+type HouseholdsConnection {
+  edges: [HouseholdsEdge!]!
+  pageInfo: PageInfo!
+}
+
+type HouseholdsEdge {
+  cursor: String!
+  node: Households!
+}
+
+input HouseholdsFilter {
+  id: UUIDFilter
+  name: StringFilter
+  address: StringFilter
+  createdAt: DatetimeFilter
+  updatedAt: DatetimeFilter
+  archivedAt: DatetimeFilter
+  nodeId: IDFilter
+
+  """
+  Returns true only if all its inner filters are true, otherwise returns false
+  """
+  and: [HouseholdsFilter!]
+
+  """
+  Returns true if at least one of its inner filters is true, otherwise returns false
+  """
+  or: [HouseholdsFilter!]
+
+  """Negates a filter"""
+  not: HouseholdsFilter
+}
+
+input HouseholdsInsertInput {
+  name: String
+  address: String
+}
+
+type HouseholdsInsertResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [Households!]!
+}
+
+input HouseholdsOrderBy {
+  id: OrderByDirection
+  name: OrderByDirection
+  address: OrderByDirection
+  createdAt: OrderByDirection
+  updatedAt: OrderByDirection
+  archivedAt: OrderByDirection
+}
+
+input HouseholdsUpdateInput {
+  name: String
+  address: String
+  archivedAt: Datetime
+}
+
+type HouseholdsUpdateResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [Households!]!
+}
+
+"""
+Boolean expression comparing fields on type "ID"
+"""
+input IDFilter {
+  eq: ID
+}
+
+"""
+Boolean expression comparing fields on type "Int"
+"""
+input IntFilter {
+  eq: Int
+  gt: Int
+  gte: Int
+  in: [Int!]
+  is: FilterIs
+  lt: Int
+  lte: Int
+  neq: Int
+}
+
+"""
+Boolean expression comparing fields on type "IntList"
+"""
+input IntListFilter {
+  containedBy: [Int!]
+  contains: [Int!]
+  eq: [Int!]
+  is: FilterIs
+  overlaps: [Int!]
+}
+
+"""A Javascript Object Notation value serialized as a string"""
+scalar JSON
+
+type MemberDepartments implements Node {
+  """Globally Unique Record Identifier"""
+  nodeId: ID!
+  id: UUID!
+  memberId: UUID!
+  departmentId: UUID!
+  member: Members
+  department: Departments
+}
+
+type MemberDepartmentsConnection {
+  edges: [MemberDepartmentsEdge!]!
+  pageInfo: PageInfo!
+}
+
+type MemberDepartmentsDeleteResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [MemberDepartments!]!
+}
+
+type MemberDepartmentsEdge {
+  cursor: String!
+  node: MemberDepartments!
+}
+
+input MemberDepartmentsFilter {
+  id: UUIDFilter
+  memberId: UUIDFilter
+  departmentId: UUIDFilter
+  nodeId: IDFilter
+
+  """
+  Returns true only if all its inner filters are true, otherwise returns false
+  """
+  and: [MemberDepartmentsFilter!]
+
+  """
+  Returns true if at least one of its inner filters is true, otherwise returns false
+  """
+  or: [MemberDepartmentsFilter!]
+
+  """Negates a filter"""
+  not: MemberDepartmentsFilter
+}
+
+input MemberDepartmentsInsertInput {
+  memberId: UUID
+  departmentId: UUID
+}
+
+type MemberDepartmentsInsertResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [MemberDepartments!]!
+}
+
+input MemberDepartmentsOrderBy {
+  id: OrderByDirection
+  memberId: OrderByDirection
+  departmentId: OrderByDirection
+}
+
+"""
+Names and status of active members for ushers and the treasurer. Returns nothing to any other role. Minors are listed only to roles that may see every minor, and people with no date of birth are treated as minors.
+"""
+type MemberNames implements Node {
+  """Globally Unique Record Identifier"""
+  nodeId: ID!
+  id: UUID
+  firstName: String
+  lastName: String
+  status: MemberStatus
+}
+
+type MemberNamesConnection {
+  edges: [MemberNamesEdge!]!
+  pageInfo: PageInfo!
+}
+
+type MemberNamesEdge {
+  cursor: String!
+  node: MemberNames!
+}
+
+input MemberNamesFilter {
+  id: UUIDFilter
+  firstName: StringFilter
+  lastName: StringFilter
+  status: MemberStatusFilter
+  nodeId: IDFilter
+
+  """
+  Returns true only if all its inner filters are true, otherwise returns false
+  """
+  and: [MemberNamesFilter!]
+
+  """
+  Returns true if at least one of its inner filters is true, otherwise returns false
+  """
+  or: [MemberNamesFilter!]
+
+  """Negates a filter"""
+  not: MemberNamesFilter
+}
+
+input MemberNamesOrderBy {
+  id: OrderByDirection
+  firstName: OrderByDirection
+  lastName: OrderByDirection
+  status: OrderByDirection
+}
+
+enum MemberStatus {
+  visitor
+  active
+  inactive
+  transferred
+  deceased
+}
+
+"""
+Boolean expression comparing fields on type "MemberStatus"
+"""
+input MemberStatusFilter {
+  eq: MemberStatus
+  in: [MemberStatus!]
+  is: FilterIs
+  neq: MemberStatus
+}
+
+type Members implements Node {
+  """Globally Unique Record Identifier"""
+  nodeId: ID!
+  id: UUID!
+  householdId: UUID
+  firstName: String!
+  lastName: String!
+  phone: String
+  email: String
+  dateOfBirth: Date
+  gender: String
+  maritalStatus: String
+  status: MemberStatus!
+  firstVisitOn: Date
+  joinedOn: Date
+  smsOptOut: Boolean!
+  consentRecordedAt: Datetime
+  createdAt: Datetime!
+  updatedAt: Datetime!
+  archivedAt: Datetime
+  household: Households
+  programParticipantsCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: ProgramParticipantsFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [ProgramParticipantsOrderBy!]
+  ): ProgramParticipantsConnection
+  memberDepartmentsCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: MemberDepartmentsFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [MemberDepartmentsOrderBy!]
+  ): MemberDepartmentsConnection
+  visitorFollowupsCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: VisitorFollowupsFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [VisitorFollowupsOrderBy!]
+  ): VisitorFollowupsConnection
+  staffCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: StaffFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [StaffOrderBy!]
+  ): StaffConnection
+  attendanceCheckinsCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: AttendanceCheckinsFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [AttendanceCheckinsOrderBy!]
+  ): AttendanceCheckinsConnection
+}
+
+type MembersConnection {
+  edges: [MembersEdge!]!
+  pageInfo: PageInfo!
+}
+
+type MembersEdge {
+  cursor: String!
+  node: Members!
+}
+
+input MembersFilter {
+  id: UUIDFilter
+  householdId: UUIDFilter
+  firstName: StringFilter
+  lastName: StringFilter
+  phone: StringFilter
+  email: StringFilter
+  dateOfBirth: DateFilter
+  gender: StringFilter
+  maritalStatus: StringFilter
+  status: MemberStatusFilter
+  firstVisitOn: DateFilter
+  joinedOn: DateFilter
+  smsOptOut: BooleanFilter
+  consentRecordedAt: DatetimeFilter
+  createdAt: DatetimeFilter
+  updatedAt: DatetimeFilter
+  archivedAt: DatetimeFilter
+  nodeId: IDFilter
+
+  """
+  Returns true only if all its inner filters are true, otherwise returns false
+  """
+  and: [MembersFilter!]
+
+  """
+  Returns true if at least one of its inner filters is true, otherwise returns false
+  """
+  or: [MembersFilter!]
+
+  """Negates a filter"""
+  not: MembersFilter
+}
+
+input MembersInsertInput {
+  householdId: UUID
+  firstName: String
+  lastName: String
+  phone: String
+  email: String
+  dateOfBirth: Date
+  gender: String
+  maritalStatus: String
+  status: MemberStatus
+  firstVisitOn: Date
+  joinedOn: Date
+  smsOptOut: Boolean
+  consentRecordedAt: Datetime
+}
+
+type MembersInsertResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [Members!]!
+}
+
+input MembersOrderBy {
+  id: OrderByDirection
+  householdId: OrderByDirection
+  firstName: OrderByDirection
+  lastName: OrderByDirection
+  phone: OrderByDirection
+  email: OrderByDirection
+  dateOfBirth: OrderByDirection
+  gender: OrderByDirection
+  maritalStatus: OrderByDirection
+  status: OrderByDirection
+  firstVisitOn: OrderByDirection
+  joinedOn: OrderByDirection
+  smsOptOut: OrderByDirection
+  consentRecordedAt: OrderByDirection
+  createdAt: OrderByDirection
+  updatedAt: OrderByDirection
+  archivedAt: OrderByDirection
+}
+
+input MembersUpdateInput {
+  householdId: UUID
+  firstName: String
+  lastName: String
+  phone: String
+  email: String
+  dateOfBirth: Date
+  gender: String
+  maritalStatus: String
+  status: MemberStatus
+  firstVisitOn: Date
+  joinedOn: Date
+  smsOptOut: Boolean
+  consentRecordedAt: Datetime
+  archivedAt: Datetime
+}
+
+type MembersUpdateResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [Members!]!
+}
+
+"""The root type for creating and mutating data"""
+type Mutation {
+  """Deletes zero or more records from the `AttendanceCheckins` collection"""
+  deleteFromAttendanceCheckinsCollection(
+    """Restricts the mutation's impact to records matching the criteria"""
+    filter: AttendanceCheckinsFilter
+
+    """
+    The maximum number of records in the collection permitted to be affected
+    """
+    atMost: Int! = 1
+  ): AttendanceCheckinsDeleteResponse!
+
+  """Deletes zero or more records from the `MemberDepartments` collection"""
+  deleteFromMemberDepartmentsCollection(
+    """Restricts the mutation's impact to records matching the criteria"""
+    filter: MemberDepartmentsFilter
+
+    """
+    The maximum number of records in the collection permitted to be affected
+    """
+    atMost: Int! = 1
+  ): MemberDepartmentsDeleteResponse!
+
+  """Deletes zero or more records from the `ProgramParticipants` collection"""
+  deleteFromProgramParticipantsCollection(
+    """Restricts the mutation's impact to records matching the criteria"""
+    filter: ProgramParticipantsFilter
+
+    """
+    The maximum number of records in the collection permitted to be affected
+    """
+    atMost: Int! = 1
+  ): ProgramParticipantsDeleteResponse!
+
+  """Deletes zero or more records from the `StaffRoles` collection"""
+  deleteFromStaffRolesCollection(
+    """Restricts the mutation's impact to records matching the criteria"""
+    filter: StaffRolesFilter
+
+    """
+    The maximum number of records in the collection permitted to be affected
+    """
+    atMost: Int! = 1
+  ): StaffRolesDeleteResponse!
+  generateRecurringServices(pTemplates: JSON!, pWeeks: Int): Int
+  grantRole(pStaffId: UUID!, pRole: String!, pDepartmentId: UUID): StaffRoles
+
+  """Adds one or more `AttendanceCheckins` records to the collection"""
+  insertIntoAttendanceCheckinsCollection(objects: [AttendanceCheckinsInsertInput!]!): AttendanceCheckinsInsertResponse
+
+  """Adds one or more `Departments` records to the collection"""
+  insertIntoDepartmentsCollection(objects: [DepartmentsInsertInput!]!): DepartmentsInsertResponse
+
+  """Adds one or more `Households` records to the collection"""
+  insertIntoHouseholdsCollection(objects: [HouseholdsInsertInput!]!): HouseholdsInsertResponse
+
+  """Adds one or more `MemberDepartments` records to the collection"""
+  insertIntoMemberDepartmentsCollection(objects: [MemberDepartmentsInsertInput!]!): MemberDepartmentsInsertResponse
+
+  """Adds one or more `Members` records to the collection"""
+  insertIntoMembersCollection(objects: [MembersInsertInput!]!): MembersInsertResponse
+
+  """Adds one or more `ProgramParticipants` records to the collection"""
+  insertIntoProgramParticipantsCollection(objects: [ProgramParticipantsInsertInput!]!): ProgramParticipantsInsertResponse
+
+  """Adds one or more `Programs` records to the collection"""
+  insertIntoProgramsCollection(objects: [ProgramsInsertInput!]!): ProgramsInsertResponse
+
+  """Adds one or more `Services` records to the collection"""
+  insertIntoServicesCollection(objects: [ServicesInsertInput!]!): ServicesInsertResponse
+
+  """Adds one or more `StaffRoles` records to the collection"""
+  insertIntoStaffRolesCollection(objects: [StaffRolesInsertInput!]!): StaffRolesInsertResponse
+
+  """Adds one or more `VisitorFollowups` records to the collection"""
+  insertIntoVisitorFollowupsCollection(objects: [VisitorFollowupsInsertInput!]!): VisitorFollowupsInsertResponse
+  logAuditEvent(pAction: String!, pTableName: String!, pRecordId: UUID, pDetails: JSON): UUID
+  recordAttendanceCounts(pServiceId: UUID!, pMen: Int!, pWomen: Int!, pChildren: Int!, pVisitors: Int!): AttendanceCounts
+  revokeRole(pStaffId: UUID!, pRole: String!, pDepartmentId: UUID): StaffRoles
+
+  """Updates zero or more records in the `Departments` collection"""
+  updateDepartmentsCollection(
+    """
+    Fields that are set will be updated for all records matching the `filter`
+    """
+    set: DepartmentsUpdateInput!
+
+    """Restricts the mutation's impact to records matching the criteria"""
+    filter: DepartmentsFilter
+
+    """
+    The maximum number of records in the collection permitted to be affected
+    """
+    atMost: Int! = 1
+  ): DepartmentsUpdateResponse!
+
+  """Updates zero or more records in the `Households` collection"""
+  updateHouseholdsCollection(
+    """
+    Fields that are set will be updated for all records matching the `filter`
+    """
+    set: HouseholdsUpdateInput!
+
+    """Restricts the mutation's impact to records matching the criteria"""
+    filter: HouseholdsFilter
+
+    """
+    The maximum number of records in the collection permitted to be affected
+    """
+    atMost: Int! = 1
+  ): HouseholdsUpdateResponse!
+
+  """Updates zero or more records in the `Members` collection"""
+  updateMembersCollection(
+    """
+    Fields that are set will be updated for all records matching the `filter`
+    """
+    set: MembersUpdateInput!
+
+    """Restricts the mutation's impact to records matching the criteria"""
+    filter: MembersFilter
+
+    """
+    The maximum number of records in the collection permitted to be affected
+    """
+    atMost: Int! = 1
+  ): MembersUpdateResponse!
+
+  """Updates zero or more records in the `Programs` collection"""
+  updateProgramsCollection(
+    """
+    Fields that are set will be updated for all records matching the `filter`
+    """
+    set: ProgramsUpdateInput!
+
+    """Restricts the mutation's impact to records matching the criteria"""
+    filter: ProgramsFilter
+
+    """
+    The maximum number of records in the collection permitted to be affected
+    """
+    atMost: Int! = 1
+  ): ProgramsUpdateResponse!
+
+  """Updates zero or more records in the `Services` collection"""
+  updateServicesCollection(
+    """
+    Fields that are set will be updated for all records matching the `filter`
+    """
+    set: ServicesUpdateInput!
+
+    """Restricts the mutation's impact to records matching the criteria"""
+    filter: ServicesFilter
+
+    """
+    The maximum number of records in the collection permitted to be affected
+    """
+    atMost: Int! = 1
+  ): ServicesUpdateResponse!
+
+  """Updates zero or more records in the `Staff` collection"""
+  updateStaffCollection(
+    """
+    Fields that are set will be updated for all records matching the `filter`
+    """
+    set: StaffUpdateInput!
+
+    """Restricts the mutation's impact to records matching the criteria"""
+    filter: StaffFilter
+
+    """
+    The maximum number of records in the collection permitted to be affected
+    """
+    atMost: Int! = 1
+  ): StaffUpdateResponse!
+
+  """Updates zero or more records in the `VisitorFollowups` collection"""
+  updateVisitorFollowupsCollection(
+    """
+    Fields that are set will be updated for all records matching the `filter`
+    """
+    set: VisitorFollowupsUpdateInput!
+
+    """Restricts the mutation's impact to records matching the criteria"""
+    filter: VisitorFollowupsFilter
+
+    """
+    The maximum number of records in the collection permitted to be affected
+    """
+    atMost: Int! = 1
+  ): VisitorFollowupsUpdateResponse!
+}
+
+interface Node {
+  """Retrieves a record by `ID`"""
+  nodeId: ID!
+}
+
+"""Any type not handled by the type system"""
+scalar Opaque
+
+"""
+Boolean expression comparing fields on type "Opaque"
+"""
+input OpaqueFilter {
+  eq: Opaque
+  is: FilterIs
+}
+
+"""Defines a per-field sorting order"""
+enum OrderByDirection {
+  """Ascending order, nulls first"""
+  AscNullsFirst
+
+  """Ascending order, nulls last"""
+  AscNullsLast
+
+  """Descending order, nulls first"""
+  DescNullsFirst
+
+  """Descending order, nulls last"""
+  DescNullsLast
+}
+
+type PageInfo {
+  endCursor: String
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+}
+
+type ProgramParticipants implements Node {
+  """Globally Unique Record Identifier"""
+  nodeId: ID!
+  id: UUID!
+  programId: UUID!
+  memberId: UUID!
+  program: Programs
+  member: Members
+}
+
+type ProgramParticipantsConnection {
+  edges: [ProgramParticipantsEdge!]!
+  pageInfo: PageInfo!
+}
+
+type ProgramParticipantsDeleteResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [ProgramParticipants!]!
+}
+
+type ProgramParticipantsEdge {
+  cursor: String!
+  node: ProgramParticipants!
+}
+
+input ProgramParticipantsFilter {
+  id: UUIDFilter
+  programId: UUIDFilter
+  memberId: UUIDFilter
+  nodeId: IDFilter
+
+  """
+  Returns true only if all its inner filters are true, otherwise returns false
+  """
+  and: [ProgramParticipantsFilter!]
+
+  """
+  Returns true if at least one of its inner filters is true, otherwise returns false
+  """
+  or: [ProgramParticipantsFilter!]
+
+  """Negates a filter"""
+  not: ProgramParticipantsFilter
+}
+
+input ProgramParticipantsInsertInput {
+  programId: UUID
+  memberId: UUID
+}
+
+type ProgramParticipantsInsertResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [ProgramParticipants!]!
+}
+
+input ProgramParticipantsOrderBy {
+  id: OrderByDirection
+  programId: OrderByDirection
+  memberId: OrderByDirection
+}
+
+type Programs implements Node {
+  """Globally Unique Record Identifier"""
+  nodeId: ID!
+  id: UUID!
+  name: String!
+  description: String
+  departmentId: UUID
+  leadStaffId: UUID
+  startsOn: Date
+  endsOn: Date
+  createdAt: Datetime!
+  updatedAt: Datetime!
+  archivedAt: Datetime
+  department: Departments
+  leadStaff: Staff
+  programParticipantsCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: ProgramParticipantsFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [ProgramParticipantsOrderBy!]
+  ): ProgramParticipantsConnection
+  servicesCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: ServicesFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [ServicesOrderBy!]
+  ): ServicesConnection
+}
+
+type ProgramsConnection {
+  edges: [ProgramsEdge!]!
+  pageInfo: PageInfo!
+}
+
+type ProgramsEdge {
+  cursor: String!
+  node: Programs!
+}
+
+input ProgramsFilter {
+  id: UUIDFilter
+  name: StringFilter
+  description: StringFilter
+  departmentId: UUIDFilter
+  leadStaffId: UUIDFilter
+  startsOn: DateFilter
+  endsOn: DateFilter
+  createdAt: DatetimeFilter
+  updatedAt: DatetimeFilter
+  archivedAt: DatetimeFilter
+  nodeId: IDFilter
+
+  """
+  Returns true only if all its inner filters are true, otherwise returns false
+  """
+  and: [ProgramsFilter!]
+
+  """
+  Returns true if at least one of its inner filters is true, otherwise returns false
+  """
+  or: [ProgramsFilter!]
+
+  """Negates a filter"""
+  not: ProgramsFilter
+}
+
+input ProgramsInsertInput {
+  name: String
+  description: String
+  departmentId: UUID
+  leadStaffId: UUID
+  startsOn: Date
+  endsOn: Date
+}
+
+type ProgramsInsertResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [Programs!]!
+}
+
+input ProgramsOrderBy {
+  id: OrderByDirection
+  name: OrderByDirection
+  description: OrderByDirection
+  departmentId: OrderByDirection
+  leadStaffId: OrderByDirection
+  startsOn: OrderByDirection
+  endsOn: OrderByDirection
+  createdAt: OrderByDirection
+  updatedAt: OrderByDirection
+  archivedAt: OrderByDirection
+}
+
+input ProgramsUpdateInput {
+  name: String
+  description: String
+  departmentId: UUID
+  leadStaffId: UUID
+  startsOn: Date
+  endsOn: Date
+  archivedAt: Datetime
+}
+
+type ProgramsUpdateResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [Programs!]!
+}
+
+"""The root type for querying data"""
+type Query {
+  """Retrieve a record of type `AttendanceCheckins` by its primary key"""
+  attendanceCheckinsByPk(
+    """The record's `id` value"""
+    id: UUID!
+  ): AttendanceCheckins
+
+  """A pagable collection of type `AttendanceCheckins`"""
+  attendanceCheckinsCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: AttendanceCheckinsFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [AttendanceCheckinsOrderBy!]
+  ): AttendanceCheckinsConnection!
+
+  """Retrieve a record of type `AttendanceCounts` by its primary key"""
+  attendanceCountsByPk(
+    """The record's `id` value"""
+    id: UUID!
+  ): AttendanceCounts
+
+  """A pagable collection of type `AttendanceCounts`"""
+  attendanceCountsCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: AttendanceCountsFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [AttendanceCountsOrderBy!]
+  ): AttendanceCountsConnection!
+
+  """Retrieve a record of type `Departments` by its primary key"""
+  departmentsByPk(
+    """The record's `id` value"""
+    id: UUID!
+  ): Departments
+
+  """A pagable collection of type `Departments`"""
+  departmentsCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: DepartmentsFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [DepartmentsOrderBy!]
+  ): DepartmentsConnection!
+
+  """Retrieve a record of type `Households` by its primary key"""
+  householdsByPk(
+    """The record's `id` value"""
+    id: UUID!
+  ): Households
+
+  """A pagable collection of type `Households`"""
+  householdsCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: HouseholdsFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [HouseholdsOrderBy!]
+  ): HouseholdsConnection!
+
+  """Retrieve a record of type `MemberDepartments` by its primary key"""
+  memberDepartmentsByPk(
+    """The record's `id` value"""
+    id: UUID!
+  ): MemberDepartments
+
+  """A pagable collection of type `MemberDepartments`"""
+  memberDepartmentsCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: MemberDepartmentsFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [MemberDepartmentsOrderBy!]
+  ): MemberDepartmentsConnection!
+
+  """Retrieve a record of type `MemberNames` by its primary key"""
+  memberNamesByPk(
+    """The record's `id` value"""
+    id: UUID!
+  ): MemberNames
+
+  """A pagable collection of type `MemberNames`"""
+  memberNamesCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: MemberNamesFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [MemberNamesOrderBy!]
+  ): MemberNamesConnection!
+
+  """Retrieve a record of type `Members` by its primary key"""
+  membersByPk(
+    """The record's `id` value"""
+    id: UUID!
+  ): Members
+
+  """A pagable collection of type `Members`"""
+  membersCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: MembersFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [MembersOrderBy!]
+  ): MembersConnection!
+
+  """Retrieve a record by its `ID`"""
+  node(
+    """The record's `ID`"""
+    nodeId: ID!
+  ): Node
+
+  """Retrieve a record of type `ProgramParticipants` by its primary key"""
+  programParticipantsByPk(
+    """The record's `id` value"""
+    id: UUID!
+  ): ProgramParticipants
+
+  """A pagable collection of type `ProgramParticipants`"""
+  programParticipantsCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: ProgramParticipantsFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [ProgramParticipantsOrderBy!]
+  ): ProgramParticipantsConnection!
+
+  """Retrieve a record of type `Programs` by its primary key"""
+  programsByPk(
+    """The record's `id` value"""
+    id: UUID!
+  ): Programs
+
+  """A pagable collection of type `Programs`"""
+  programsCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: ProgramsFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [ProgramsOrderBy!]
+  ): ProgramsConnection!
+
+  """Retrieve a record of type `Services` by its primary key"""
+  servicesByPk(
+    """The record's `id` value"""
+    id: UUID!
+  ): Services
+
+  """A pagable collection of type `Services`"""
+  servicesCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: ServicesFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [ServicesOrderBy!]
+  ): ServicesConnection!
+
+  """Retrieve a record of type `Staff` by its primary key"""
+  staffByPk(
+    """The record's `id` value"""
+    id: UUID!
+  ): Staff
+
+  """A pagable collection of type `Staff`"""
+  staffCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: StaffFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [StaffOrderBy!]
+  ): StaffConnection!
+
+  """Retrieve a record of type `StaffRoles` by its primary key"""
+  staffRolesByPk(
+    """The record's `id` value"""
+    id: UUID!
+  ): StaffRoles
+
+  """A pagable collection of type `StaffRoles`"""
+  staffRolesCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: StaffRolesFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [StaffRolesOrderBy!]
+  ): StaffRolesConnection!
+
+  """Retrieve a record of type `VisitorFollowups` by its primary key"""
+  visitorFollowupsByPk(
+    """The record's `id` value"""
+    id: UUID!
+  ): VisitorFollowups
+
+  """A pagable collection of type `VisitorFollowups`"""
+  visitorFollowupsCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: VisitorFollowupsFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [VisitorFollowupsOrderBy!]
+  ): VisitorFollowupsConnection!
+}
+
+enum ServiceType {
+  sunday
+  midweek
+  special
+  program
+}
+
+"""
+Boolean expression comparing fields on type "ServiceType"
+"""
+input ServiceTypeFilter {
+  eq: ServiceType
+  in: [ServiceType!]
+  is: FilterIs
+  neq: ServiceType
+}
+
+type Services implements Node {
+  """Globally Unique Record Identifier"""
+  nodeId: ID!
+  id: UUID!
+  name: String!
+  type: ServiceType!
+  startsAt: Datetime!
+  programId: UUID
+  createdAt: Datetime!
+  updatedAt: Datetime!
+  archivedAt: Datetime
+  program: Programs
+  attendanceCount: AttendanceCounts
+  attendanceCheckinsCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: AttendanceCheckinsFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [AttendanceCheckinsOrderBy!]
+  ): AttendanceCheckinsConnection
+}
+
+type ServicesConnection {
+  edges: [ServicesEdge!]!
+  pageInfo: PageInfo!
+}
+
+type ServicesEdge {
+  cursor: String!
+  node: Services!
+}
+
+input ServicesFilter {
+  id: UUIDFilter
+  name: StringFilter
+  type: ServiceTypeFilter
+  startsAt: DatetimeFilter
+  programId: UUIDFilter
+  createdAt: DatetimeFilter
+  updatedAt: DatetimeFilter
+  archivedAt: DatetimeFilter
+  nodeId: IDFilter
+
+  """
+  Returns true only if all its inner filters are true, otherwise returns false
+  """
+  and: [ServicesFilter!]
+
+  """
+  Returns true if at least one of its inner filters is true, otherwise returns false
+  """
+  or: [ServicesFilter!]
+
+  """Negates a filter"""
+  not: ServicesFilter
+}
+
+input ServicesInsertInput {
+  name: String
+  type: ServiceType
+  startsAt: Datetime
+  programId: UUID
+}
+
+type ServicesInsertResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [Services!]!
+}
+
+input ServicesOrderBy {
+  id: OrderByDirection
+  name: OrderByDirection
+  type: OrderByDirection
+  startsAt: OrderByDirection
+  programId: OrderByDirection
+  createdAt: OrderByDirection
+  updatedAt: OrderByDirection
+  archivedAt: OrderByDirection
+}
+
+input ServicesUpdateInput {
+  name: String
+  type: ServiceType
+  startsAt: Datetime
+  programId: UUID
+  archivedAt: Datetime
+}
+
+type ServicesUpdateResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [Services!]!
+}
+
+type Staff implements Node {
+  """Globally Unique Record Identifier"""
+  nodeId: ID!
+  id: UUID!
+  fullName: String!
+  phone: String
+  memberId: UUID
+  isActive: Boolean!
+  createdAt: Datetime!
+  updatedAt: Datetime!
+  member: Members
+  staffRolesCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: StaffRolesFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [StaffRolesOrderBy!]
+  ): StaffRolesConnection
+  grantedRolesCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: StaffRolesFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [StaffRolesOrderBy!]
+  ): StaffRolesConnection
+  assignedVisitorFollowupsCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: VisitorFollowupsFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [VisitorFollowupsOrderBy!]
+  ): VisitorFollowupsConnection
+  ledProgramsCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: ProgramsFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [ProgramsOrderBy!]
+  ): ProgramsConnection
+  recordedAttendanceCountsCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: AttendanceCountsFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [AttendanceCountsOrderBy!]
+  ): AttendanceCountsConnection
+  recordedAttendanceCheckinsCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: AttendanceCheckinsFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [AttendanceCheckinsOrderBy!]
+  ): AttendanceCheckinsConnection
+}
+
+type StaffConnection {
+  edges: [StaffEdge!]!
+  pageInfo: PageInfo!
+}
+
+type StaffEdge {
+  cursor: String!
+  node: Staff!
+}
+
+input StaffFilter {
+  id: UUIDFilter
+  fullName: StringFilter
+  phone: StringFilter
+  memberId: UUIDFilter
+  isActive: BooleanFilter
+  createdAt: DatetimeFilter
+  updatedAt: DatetimeFilter
+  nodeId: IDFilter
+
+  """
+  Returns true only if all its inner filters are true, otherwise returns false
+  """
+  and: [StaffFilter!]
+
+  """
+  Returns true if at least one of its inner filters is true, otherwise returns false
+  """
+  or: [StaffFilter!]
+
+  """Negates a filter"""
+  not: StaffFilter
+}
+
+input StaffOrderBy {
+  id: OrderByDirection
+  fullName: OrderByDirection
+  phone: OrderByDirection
+  memberId: OrderByDirection
+  isActive: OrderByDirection
+  createdAt: OrderByDirection
+  updatedAt: OrderByDirection
+}
+
+type StaffRoles implements Node {
+  """Globally Unique Record Identifier"""
+  nodeId: ID!
+  id: UUID!
+  staffId: UUID!
+  role: AppRole!
+  departmentId: UUID
+  grantedBy: UUID
+  grantedAt: Datetime!
+  staff: Staff
+  department: Departments
+  grantedByStaff: Staff
+}
+
+type StaffRolesConnection {
+  edges: [StaffRolesEdge!]!
+  pageInfo: PageInfo!
+}
+
+type StaffRolesDeleteResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [StaffRoles!]!
+}
+
+type StaffRolesEdge {
+  cursor: String!
+  node: StaffRoles!
+}
+
+input StaffRolesFilter {
+  id: UUIDFilter
+  staffId: UUIDFilter
+  role: AppRoleFilter
+  departmentId: UUIDFilter
+  grantedBy: UUIDFilter
+  grantedAt: DatetimeFilter
+  nodeId: IDFilter
+
+  """
+  Returns true only if all its inner filters are true, otherwise returns false
+  """
+  and: [StaffRolesFilter!]
+
+  """
+  Returns true if at least one of its inner filters is true, otherwise returns false
+  """
+  or: [StaffRolesFilter!]
+
+  """Negates a filter"""
+  not: StaffRolesFilter
+}
+
+input StaffRolesInsertInput {
+  id: UUID
+  staffId: UUID
+  role: AppRole
+  departmentId: UUID
+  grantedBy: UUID
+  grantedAt: Datetime
+}
+
+type StaffRolesInsertResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [StaffRoles!]!
+}
+
+input StaffRolesOrderBy {
+  id: OrderByDirection
+  staffId: OrderByDirection
+  role: OrderByDirection
+  departmentId: OrderByDirection
+  grantedBy: OrderByDirection
+  grantedAt: OrderByDirection
+}
+
+input StaffUpdateInput {
+  fullName: String
+  phone: String
+  memberId: UUID
+  isActive: Boolean
+}
+
+type StaffUpdateResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [Staff!]!
+}
+
+"""
+Boolean expression comparing fields on type "String"
+"""
+input StringFilter {
+  eq: String
+  gt: String
+  gte: String
+  ilike: String
+  in: [String!]
+  iregex: String
+  is: FilterIs
+  like: String
+  lt: String
+  lte: String
+  neq: String
+  regex: String
+  startsWith: String
+}
+
+"""
+Boolean expression comparing fields on type "StringList"
+"""
+input StringListFilter {
+  containedBy: [String!]
+  contains: [String!]
+  eq: [String!]
+  is: FilterIs
+  overlaps: [String!]
+}
+
+"""A time without date information"""
+scalar Time
+
+"""
+Boolean expression comparing fields on type "Time"
+"""
+input TimeFilter {
+  eq: Time
+  gt: Time
+  gte: Time
+  in: [Time!]
+  is: FilterIs
+  lt: Time
+  lte: Time
+  neq: Time
+}
+
+"""
+Boolean expression comparing fields on type "TimeList"
+"""
+input TimeListFilter {
+  containedBy: [Time!]
+  contains: [Time!]
+  eq: [Time!]
+  is: FilterIs
+  overlaps: [Time!]
+}
+
+"""A universally unique identifier"""
+scalar UUID
+
+"""
+Boolean expression comparing fields on type "UUID"
+"""
+input UUIDFilter {
+  eq: UUID
+  in: [UUID!]
+  is: FilterIs
+  neq: UUID
+}
+
+"""
+Boolean expression comparing fields on type "UUIDList"
+"""
+input UUIDListFilter {
+  containedBy: [UUID!]
+  contains: [UUID!]
+  eq: [UUID!]
+  is: FilterIs
+  overlaps: [UUID!]
+}
+
+type VisitorFollowups implements Node {
+  """Globally Unique Record Identifier"""
+  nodeId: ID!
+  id: UUID!
+  memberId: UUID!
+  assignedTo: UUID
+  status: String!
+  notes: String
+  dueOn: Date
+  createdAt: Datetime!
+  updatedAt: Datetime!
+  member: Members
+  assignedStaff: Staff
+}
+
+type VisitorFollowupsConnection {
+  edges: [VisitorFollowupsEdge!]!
+  pageInfo: PageInfo!
+}
+
+type VisitorFollowupsEdge {
+  cursor: String!
+  node: VisitorFollowups!
+}
+
+input VisitorFollowupsFilter {
+  id: UUIDFilter
+  memberId: UUIDFilter
+  assignedTo: UUIDFilter
+  status: StringFilter
+  notes: StringFilter
+  dueOn: DateFilter
+  createdAt: DatetimeFilter
+  updatedAt: DatetimeFilter
+  nodeId: IDFilter
+
+  """
+  Returns true only if all its inner filters are true, otherwise returns false
+  """
+  and: [VisitorFollowupsFilter!]
+
+  """
+  Returns true if at least one of its inner filters is true, otherwise returns false
+  """
+  or: [VisitorFollowupsFilter!]
+
+  """Negates a filter"""
+  not: VisitorFollowupsFilter
+}
+
+input VisitorFollowupsInsertInput {
+  memberId: UUID
+  assignedTo: UUID
+  status: String
+  notes: String
+  dueOn: Date
+}
+
+type VisitorFollowupsInsertResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [VisitorFollowups!]!
+}
+
+input VisitorFollowupsOrderBy {
+  id: OrderByDirection
+  memberId: OrderByDirection
+  assignedTo: OrderByDirection
+  status: OrderByDirection
+  notes: OrderByDirection
+  dueOn: OrderByDirection
+  createdAt: OrderByDirection
+  updatedAt: OrderByDirection
+}
+
+input VisitorFollowupsUpdateInput {
+  assignedTo: UUID
+  status: String
+  notes: String
+  dueOn: Date
+}
+
+type VisitorFollowupsUpdateResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [VisitorFollowups!]!
+}

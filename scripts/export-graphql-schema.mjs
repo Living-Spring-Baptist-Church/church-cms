@@ -1,8 +1,10 @@
-// Exports the pg_graphql schema of the local database as SDL into graphql/schema.graphql.
-// GraphQL Code Generator reads that committed file, so `pnpm codegen` works without Docker.
+// Exports the pg_graphql schema of the local database as SDL, twice: as anon into
+// graphql/schema.graphql (public site) and as authenticated into graphql/dashboard.schema.graphql
+// (staff dashboard). GraphQL Code Generator reads those committed files, so `pnpm codegen` works
+// without Docker.
 //
 // How it works: the introspection query runs inside Postgres through graphql.resolve(), as the
-// `anon` database role, over `docker exec psql` into the local Supabase database container.
+// `anon` and `authenticated` database roles, over `docker exec psql` into the local Supabase database container.
 // No HTTP call, no API key and no service role key is involved (CLAUDE.md rule 8).
 //
 // pg_graphql 1.6 answers introspection only when the schema comment sets "introspection": true,
@@ -20,11 +22,15 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { buildClientSchema, getIntrospectionQuery, printSchema } from "graphql";
 
-const SCHEMA_FILE = "graphql/schema.graphql";
+// The public site reads as anon. Dashboard operations are typed against what a signed-in staff
+// member can call, because functions such as logAuditEvent are granted to authenticated only.
+const SCHEMA_EXPORTS = [
+  { role: "anon", file: "graphql/schema.graphql" },
+  { role: "authenticated", file: "graphql/dashboard.schema.graphql" },
+];
 const SUPABASE_CONFIG_FILE = "supabase/config.toml";
 const DATABASE_USER = "postgres";
 const DATABASE_NAME = "postgres";
-const INTROSPECTION_ROLE = "anon";
 const REQUIRE_DATABASE_FLAG = "--require-database";
 // 64 MiB, far above any realistic introspection result.
 const MAX_OUTPUT_BYTES = 67_108_864;
@@ -51,11 +57,11 @@ begin
 end
 $lbc_enable$;`;
 
-function buildIntrospectionSql() {
+function buildIntrospectionSql(role) {
   return [
     "begin;",
     ENABLE_INTROSPECTION_SQL,
-    `set local role ${INTROSPECTION_ROLE};`,
+    `set local role ${role};`,
     `select graphql.resolve($lbc_query$${getIntrospectionQuery()}$lbc_query$);`,
     "rollback;",
   ].join("\n");
@@ -99,28 +105,36 @@ function extractIntrospection(psqlOutput) {
   return result.data;
 }
 
-function writeSchema(introspection) {
+function writeSchema(introspection, schemaFile) {
   const sdl = printSchema(buildClientSchema(introspection));
-  mkdirSync(dirname(SCHEMA_FILE), { recursive: true });
-  writeFileSync(SCHEMA_FILE, `${sdl}\n`);
-  console.log(`Wrote ${SCHEMA_FILE}`);
+  mkdirSync(dirname(schemaFile), { recursive: true });
+  writeFileSync(schemaFile, `${sdl}\n`);
+  console.log(`Wrote ${schemaFile}`);
+}
+
+function exportAll(containerName) {
+  // Introspect everything before writing, so a failure never leaves one schema updated and one stale.
+  const introspections = SCHEMA_EXPORTS.map(({ role, file }) => ({
+    file,
+    introspection: extractIntrospection(runInContainer(containerName, buildIntrospectionSql(role))),
+  }));
+  introspections.forEach(({ file, introspection }) => {
+    writeSchema(introspection, file);
+  });
 }
 
 function main() {
   const containerName = `supabase_db_${readProjectId()}`;
-  let output;
   try {
-    output = runInContainer(containerName, buildIntrospectionSql());
+    exportAll(containerName);
   } catch (error) {
     const reason = error instanceof Error ? error.message.split("\n")[0] : String(error);
-    const message = `Database container ${containerName} is not reachable (${reason}). Run \`pnpm db:start\` and re-run \`pnpm schema:export\` to refresh the schema.`;
+    const message = `Database container ${containerName} is not reachable (${reason}). Run \`pnpm db:start\` and re-run \`pnpm schema:export\` to refresh the schemas.`;
     if (process.argv.includes(REQUIRE_DATABASE_FLAG)) {
       throw new Error(message);
     }
-    console.warn(`${message} Keeping the committed ${SCHEMA_FILE}.`);
-    return;
+    console.warn(`${message} Keeping the committed schema files.`);
   }
-  writeSchema(extractIntrospection(output));
 }
 
 try {

@@ -1,0 +1,3 @@
+mutation LogAuditEvent($action: String!, $tableName: String!, $recordId: UUID, $details: JSON) {
+  logAuditEvent(pAction: $action, pTableName: $tableName, pRecordId: $recordId, pDetails: $details)
+}
