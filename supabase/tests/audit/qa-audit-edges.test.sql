@@ -129,6 +129,10 @@ begin
 end;
 $$;
 
+-- staff.member_id has a foreign key since LBC-26, so the linked member has to exist.
+insert into public.members (id, first_name, last_name, date_of_birth)
+values ('30000000-0000-4000-8000-000000000001', 'Audit', 'Edge', '1980-01-01');
+
 select pg_temp.mark('before_calls');
 
 select throws_ok($$ select pg_temp.log_as_pastor('login') $$, 'P0001', 'VALIDATION_FAILED', 'should reject a lower case action');
