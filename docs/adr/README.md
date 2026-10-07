@@ -12,9 +12,11 @@ Seven foundational decisions are proposed here; each becomes Accepted once the d
 | ADR-002 | Language | Proposed | TypeScript (strict) everywhere |
 | ADR-003 | Web framework | Proposed | Next.js App Router for both apps |
 | ADR-004 | Backend platform | Proposed | Supabase: Postgres, Auth, Storage |
-| ADR-008 | Hosting | Proposed | Vercel Hobby for the demo; church production use needs written confirmation from Vercel or Pro |
+| ADR-008 | Hosting | Accepted for the demo | Vercel Hobby for the demo; church production use needs written confirmation from Vercel or Pro |
 | ADR-015 | API layer | Proposed | GraphQL via pg\_graphql |
 | ADR-016 | Paid services | Proposed | Free tiers for the demo; paid services behind adapters, switched on after church review |
+
+Before real data goes in, work through the [go-live checklist](../go-live-checklist.md), which includes moving these ADRs to Accepted. Product decisions are in [decisions](../decisions.md).
 
 ADR-005 to ADR-014, except ADR-008 (migrations, UI, forms, jobs, messaging, media, monitoring, testing, monorepo) are listed in the architecture doc and will be written before their phase starts.
 
@@ -115,7 +117,7 @@ ADR-005 to ADR-014, except ADR-008 (migrations, UI, forms, jobs, messaging, medi
 
 ## ADR-008: Vercel Hobby for the demo; church use needs confirmation or Pro
 
-**Status:** Proposed (the church-use question is open and needs a human) · **Date:** 5 Oct 2026 · **Deciders:** Developer, Church Administrator (budget)
+**Status:** Accepted for the demo (dummy data only); real data needs Pro or Vercel's written confirmation (go-live item) · **Date:** 5 Oct 2026 · **Deciders:** Developer, Church Administrator (budget)
 
 **Context.** Both apps need hosting with a preview deploy per pull request and no server to maintain (architecture doc). There is no budget before the church reviews the demo (ADR-016). Facts checked on vercel.com/docs/plans/hobby (page last updated 14 Sep 2026): the Hobby plan "is free and aimed at developers with personal projects, and small-scale applications", and its fair use guidelines "restrict users to non-commercial, personal use only". Vercel's documentation and search do not say whether a church or other non-profit organisation counts as personal use. Hobby also cannot connect a private repository owned by a GitHub organisation (API error 409: "The repository is private and owned by an organization, which is not supported on the Hobby plan. Upgrade to Pro to continue."). Hobby limits: 100 deployments per day, 200 projects, 100 GB fast data transfer, builds on 2 vCPUs, runtime logs kept 1 hour. Pro is $20 per developer seat per month.
 
@@ -131,13 +133,13 @@ ADR-005 to ADR-014, except ADR-008 (migrations, UI, forms, jobs, messaging, medi
 
 **Consequences**
 
-- **Open question for the human:** ask Vercel (support or sales) whether a church or non-profit may use the Hobby plan for its production system. Record the answer here and move this ADR to Accepted or supersede it. Until then, treat the answer as unknown.
+- **Resolved by decision, 7 Oct 2026 (owner):** the free Hobby plan is accepted for the demo, which holds dummy data only. Before real member or financial data, upgrade both projects to Pro, or obtain written confirmation from Vercel that a church may use Hobby for production. This is a go-live item in the [go-live checklist](../go-live-checklist.md). Asking Vercel (support or sales) remains the way to get that confirmation; record the answer here when it arrives.
 - The repository is public, so no secret and no real member, child or financial data may ever be committed, in code, tests, fixtures, screenshots or history (CLAUDE.md rules 7 and 8). The secret scan blocks merges, and `pnpm check:service-role-key` stops the Supabase service role key from reaching either app or Vercel.
 - Branch protection on `main` works on the free GitHub plan because the repository is public (README, "Branch protection on `main`").
 - The service role key is never added to either Vercel project. Environment variables are set per environment in Vercel, and previews use the demo database (README, "Deployment on Vercel").
 - Both apps send security headers (HTTPS only, no framing) from one shared definition in `packages/config`.
 - Hobby has no budget alerts, so watch the 100 deployments per day and data transfer limits during busy review weeks.
-- Revisit when the church review decides on production hosting, or when Vercel answers the open question.
+- Revisit when the church review decides on production hosting, or when Vercel answers.
 
 ## ADR-015: GraphQL via Supabase pg\_graphql as the API layer
 
@@ -164,6 +166,7 @@ ADR-005 to ADR-014, except ADR-008 (migrations, UI, forms, jobs, messaging, medi
 - Finance rules live in Postgres functions with pgTAP tests, not in app code.
 - The schema is exported from the local database as SDL into `graphql/schema.graphql` (`pnpm schema:export`) and committed. pg_graphql 1.6 only answers introspection when the schema comment sets `"introspection": true`; the export switches it on inside a rolled-back transaction, so the database and production setting are untouched.
 - Operations are `.graphql` files under `graphql/`. `pnpm codegen` writes typed documents to `packages/db/src/generated/graphql.ts`, committed and marked do not edit. `pnpm codegen:check` fails when they are stale. LBC-15 wires it into `pnpm verify` and CI.
+- **Note, 7 Oct 2026:** urql is the chosen client (LBC-14). The Supabase auth adapter lives in `packages/providers`, so CLAUDE.md rule 6 (no vendor SDK outside `packages/providers`) is kept as written (owner decision, see [decisions](../decisions.md)).
 - Learning cost: GraphQL, codegen and client caching add setup time in Phase 1; budget a week for it.
 - Revisit (supersede this ADR) if the generated schema blocks a needed feature; the fallback is a custom Yoga server calling the database as the signed-in user.
 

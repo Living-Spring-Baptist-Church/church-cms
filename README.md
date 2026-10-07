@@ -1,6 +1,6 @@
 # Living Spring Baptist Church: Church Management System
 
-A pnpm + Turborepo monorepo with two Next.js App Router apps (the staff dashboard and the public website) and the shared packages they use. Read [`CLAUDE.md`](CLAUDE.md) before contributing, then [`docs/standards/frontend.md`](docs/standards/frontend.md) or [`docs/standards/backend.md`](docs/standards/backend.md).
+A pnpm + Turborepo monorepo with two Next.js App Router apps (the staff dashboard and the public website) and the shared packages they use. Read [`CLAUDE.md`](CLAUDE.md) before contributing, then [`docs/standards/frontend.md`](docs/standards/frontend.md) or [`docs/standards/backend.md`](docs/standards/backend.md). Before any real data goes in, work through the [go-live checklist](docs/go-live-checklist.md). Product decisions are in [`docs/decisions.md`](docs/decisions.md).
 
 ## Workspaces
 
