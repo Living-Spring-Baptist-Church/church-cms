@@ -93,6 +93,99 @@ input BooleanListFilter {
   overlaps: [Boolean!]
 }
 
+type ContentItems implements Node {
+  """Globally Unique Record Identifier"""
+  nodeId: ID!
+  id: UUID!
+  kind: ContentKind!
+  slug: String
+  title: String!
+  body: String
+  imagePath: String
+  publishAt: Datetime
+  expiresAt: Datetime
+}
+
+type ContentItemsConnection {
+  edges: [ContentItemsEdge!]!
+  pageInfo: PageInfo!
+}
+
+type ContentItemsEdge {
+  cursor: String!
+  node: ContentItems!
+}
+
+input ContentItemsFilter {
+  id: UUIDFilter
+  kind: ContentKindFilter
+  slug: StringFilter
+  title: StringFilter
+  body: StringFilter
+  imagePath: StringFilter
+  publishAt: DatetimeFilter
+  expiresAt: DatetimeFilter
+  nodeId: IDFilter
+
+  """
+  Returns true only if all its inner filters are true, otherwise returns false
+  """
+  and: [ContentItemsFilter!]
+
+  """
+  Returns true if at least one of its inner filters is true, otherwise returns false
+  """
+  or: [ContentItemsFilter!]
+
+  """Negates a filter"""
+  not: ContentItemsFilter
+}
+
+input ContentItemsOrderBy {
+  id: OrderByDirection
+  kind: OrderByDirection
+  slug: OrderByDirection
+  title: OrderByDirection
+  body: OrderByDirection
+  imagePath: OrderByDirection
+  publishAt: OrderByDirection
+  expiresAt: OrderByDirection
+}
+
+enum ContentKind {
+  announcement
+  quote
+  page
+  activity
+}
+
+"""
+Boolean expression comparing fields on type "ContentKind"
+"""
+input ContentKindFilter {
+  eq: ContentKind
+  in: [ContentKind!]
+  is: FilterIs
+  neq: ContentKind
+}
+
+enum ContentStatus {
+  draft
+  in_review
+  published
+  archived
+}
+
+"""
+Boolean expression comparing fields on type "ContentStatus"
+"""
+input ContentStatusFilter {
+  eq: ContentStatus
+  in: [ContentStatus!]
+  is: FilterIs
+  neq: ContentStatus
+}
+
 """
 An opaque string using for tracking a position in results during pagination
 """
@@ -277,11 +370,140 @@ type PageInfo {
 
 """The root type for querying data"""
 type Query {
+  """Retrieve a record of type `ContentItems` by its primary key"""
+  contentItemsByPk(
+    """The record's `id` value"""
+    id: UUID!
+  ): ContentItems
+
+  """A pagable collection of type `ContentItems`"""
+  contentItemsCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: ContentItemsFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [ContentItemsOrderBy!]
+  ): ContentItemsConnection!
+
   """Retrieve a record by its `ID`"""
   node(
     """The record's `ID`"""
     nodeId: ID!
   ): Node
+
+  """Retrieve a record of type `Sermons` by its primary key"""
+  sermonsByPk(
+    """The record's `id` value"""
+    id: UUID!
+  ): Sermons
+
+  """A pagable collection of type `Sermons`"""
+  sermonsCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: SermonsFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [SermonsOrderBy!]
+  ): SermonsConnection!
+}
+
+type Sermons implements Node {
+  """Globally Unique Record Identifier"""
+  nodeId: ID!
+  id: UUID!
+  title: String!
+  preacher: String!
+  preachedOn: Date!
+  series: String
+  scripture: String
+  notes: String
+  videoUrl: String
+  audioPath: String
+  publishAt: Datetime
+}
+
+type SermonsConnection {
+  edges: [SermonsEdge!]!
+  pageInfo: PageInfo!
+}
+
+type SermonsEdge {
+  cursor: String!
+  node: Sermons!
+}
+
+input SermonsFilter {
+  id: UUIDFilter
+  title: StringFilter
+  preacher: StringFilter
+  preachedOn: DateFilter
+  series: StringFilter
+  scripture: StringFilter
+  notes: StringFilter
+  videoUrl: StringFilter
+  audioPath: StringFilter
+  publishAt: DatetimeFilter
+  nodeId: IDFilter
+
+  """
+  Returns true only if all its inner filters are true, otherwise returns false
+  """
+  and: [SermonsFilter!]
+
+  """
+  Returns true if at least one of its inner filters is true, otherwise returns false
+  """
+  or: [SermonsFilter!]
+
+  """Negates a filter"""
+  not: SermonsFilter
+}
+
+input SermonsOrderBy {
+  id: OrderByDirection
+  title: OrderByDirection
+  preacher: OrderByDirection
+  preachedOn: OrderByDirection
+  series: OrderByDirection
+  scripture: OrderByDirection
+  notes: OrderByDirection
+  videoUrl: OrderByDirection
+  audioPath: OrderByDirection
+  publishAt: OrderByDirection
 }
 
 enum ServiceType {
