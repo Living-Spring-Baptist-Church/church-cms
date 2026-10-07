@@ -434,6 +434,8 @@ create function private.heads_department(dept uuid) returns boolean ...;
 
 Policies call them wrapped in `(select ...)` so Postgres evaluates them once per query, not once per row.
 
+**Two-factor in the database (LBC-41).** The helpers count super admin, pastor and treasurer (`private.mfa_required_roles()`) as held only when the JWT claim `aal` is exactly `aal2`; a missing, malformed or any other value fails closed. Other roles ignore `aal`, and a user holding both kinds keeps the second kind at aal1. `private.is_active_staff()` deliberately ignores `aal`: it gates only the `staff_select_self` and `staff_roles_select_self` policies, so a signed-in user can read their own profile and roles before the second factor is verified. `audit.log_event` (behind `log_audit_event`) uses `private.has_dashboard_session()`: active staff, and aal2 when they hold a two-factor role.
+
 **Example policies**
 
 ```sql
