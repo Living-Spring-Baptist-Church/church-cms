@@ -10,7 +10,10 @@ export const STAFF_ROLES = [
 
 export type StaffRoleName = (typeof STAFF_ROLES)[number];
 
-/** PRD NFR Authentication: these roles may not use the dashboard without two-factor. */
+/**
+ * PRD NFR Authentication: these roles may not use the dashboard without two-factor. The database enforces the
+ * same list in private.mfa_required_roles() (LBC-41): change both together.
+ */
 export const MFA_REQUIRED_ROLES: readonly StaffRoleName[] = ["super_admin", "pastor", "treasurer"];
 
 export function isStaffRoleName(candidate: string): candidate is StaffRoleName {
