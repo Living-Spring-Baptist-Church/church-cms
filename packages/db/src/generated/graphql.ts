@@ -109,6 +109,89 @@ export type BooleanListFilter = {
   overlaps?: InputMaybe<Array<Scalars['Boolean']['input']>>;
 };
 
+export type ContentItems = Node & {
+  __typename?: 'ContentItems';
+  body?: Maybe<Scalars['String']['output']>;
+  expiresAt?: Maybe<Scalars['Datetime']['output']>;
+  id: Scalars['UUID']['output'];
+  imagePath?: Maybe<Scalars['String']['output']>;
+  kind: ContentKind;
+  /** Globally Unique Record Identifier */
+  nodeId: Scalars['ID']['output'];
+  publishAt?: Maybe<Scalars['Datetime']['output']>;
+  slug?: Maybe<Scalars['String']['output']>;
+  title: Scalars['String']['output'];
+};
+
+export type ContentItemsConnection = {
+  __typename?: 'ContentItemsConnection';
+  edges: Array<ContentItemsEdge>;
+  pageInfo: PageInfo;
+};
+
+export type ContentItemsEdge = {
+  __typename?: 'ContentItemsEdge';
+  cursor: Scalars['String']['output'];
+  node: ContentItems;
+};
+
+export type ContentItemsFilter = {
+  /** Returns true only if all its inner filters are true, otherwise returns false */
+  and?: InputMaybe<Array<ContentItemsFilter>>;
+  body?: InputMaybe<StringFilter>;
+  expiresAt?: InputMaybe<DatetimeFilter>;
+  id?: InputMaybe<UuidFilter>;
+  imagePath?: InputMaybe<StringFilter>;
+  kind?: InputMaybe<ContentKindFilter>;
+  nodeId?: InputMaybe<IdFilter>;
+  /** Negates a filter */
+  not?: InputMaybe<ContentItemsFilter>;
+  /** Returns true if at least one of its inner filters is true, otherwise returns false */
+  or?: InputMaybe<Array<ContentItemsFilter>>;
+  publishAt?: InputMaybe<DatetimeFilter>;
+  slug?: InputMaybe<StringFilter>;
+  title?: InputMaybe<StringFilter>;
+};
+
+export type ContentItemsOrderBy = {
+  body?: InputMaybe<OrderByDirection>;
+  expiresAt?: InputMaybe<OrderByDirection>;
+  id?: InputMaybe<OrderByDirection>;
+  imagePath?: InputMaybe<OrderByDirection>;
+  kind?: InputMaybe<OrderByDirection>;
+  publishAt?: InputMaybe<OrderByDirection>;
+  slug?: InputMaybe<OrderByDirection>;
+  title?: InputMaybe<OrderByDirection>;
+};
+
+export type ContentKind =
+  | 'activity'
+  | 'announcement'
+  | 'page'
+  | 'quote';
+
+/** Boolean expression comparing fields on type "ContentKind" */
+export type ContentKindFilter = {
+  eq?: InputMaybe<ContentKind>;
+  in?: InputMaybe<Array<ContentKind>>;
+  is?: InputMaybe<FilterIs>;
+  neq?: InputMaybe<ContentKind>;
+};
+
+export type ContentStatus =
+  | 'archived'
+  | 'draft'
+  | 'in_review'
+  | 'published';
+
+/** Boolean expression comparing fields on type "ContentStatus" */
+export type ContentStatusFilter = {
+  eq?: InputMaybe<ContentStatus>;
+  in?: InputMaybe<Array<ContentStatus>>;
+  is?: InputMaybe<FilterIs>;
+  neq?: InputMaybe<ContentStatus>;
+};
+
 /** Boolean expression comparing fields on type "Date" */
 export type DateFilter = {
   eq?: InputMaybe<Scalars['Date']['input']>;
@@ -250,14 +333,119 @@ export type PageInfo = {
 /** The root type for querying data */
 export type Query = {
   __typename?: 'Query';
+  /** Retrieve a record of type `ContentItems` by its primary key */
+  contentItemsByPk?: Maybe<ContentItems>;
+  /** A pagable collection of type `ContentItems` */
+  contentItemsCollection: ContentItemsConnection;
   /** Retrieve a record by its `ID` */
   node?: Maybe<Node>;
+  /** Retrieve a record of type `Sermons` by its primary key */
+  sermonsByPk?: Maybe<Sermons>;
+  /** A pagable collection of type `Sermons` */
+  sermonsCollection: SermonsConnection;
+};
+
+
+/** The root type for querying data */
+export type QueryContentItemsByPkArgs = {
+  id: Scalars['UUID']['input'];
+};
+
+
+/** The root type for querying data */
+export type QueryContentItemsCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<ContentItemsFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<ContentItemsOrderBy>>;
 };
 
 
 /** The root type for querying data */
 export type QueryNodeArgs = {
   nodeId: Scalars['ID']['input'];
+};
+
+
+/** The root type for querying data */
+export type QuerySermonsByPkArgs = {
+  id: Scalars['UUID']['input'];
+};
+
+
+/** The root type for querying data */
+export type QuerySermonsCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<SermonsFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<SermonsOrderBy>>;
+};
+
+export type Sermons = Node & {
+  __typename?: 'Sermons';
+  audioPath?: Maybe<Scalars['String']['output']>;
+  id: Scalars['UUID']['output'];
+  /** Globally Unique Record Identifier */
+  nodeId: Scalars['ID']['output'];
+  notes?: Maybe<Scalars['String']['output']>;
+  preachedOn: Scalars['Date']['output'];
+  preacher: Scalars['String']['output'];
+  publishAt?: Maybe<Scalars['Datetime']['output']>;
+  scripture?: Maybe<Scalars['String']['output']>;
+  series?: Maybe<Scalars['String']['output']>;
+  title: Scalars['String']['output'];
+  videoUrl?: Maybe<Scalars['String']['output']>;
+};
+
+export type SermonsConnection = {
+  __typename?: 'SermonsConnection';
+  edges: Array<SermonsEdge>;
+  pageInfo: PageInfo;
+};
+
+export type SermonsEdge = {
+  __typename?: 'SermonsEdge';
+  cursor: Scalars['String']['output'];
+  node: Sermons;
+};
+
+export type SermonsFilter = {
+  /** Returns true only if all its inner filters are true, otherwise returns false */
+  and?: InputMaybe<Array<SermonsFilter>>;
+  audioPath?: InputMaybe<StringFilter>;
+  id?: InputMaybe<UuidFilter>;
+  nodeId?: InputMaybe<IdFilter>;
+  /** Negates a filter */
+  not?: InputMaybe<SermonsFilter>;
+  notes?: InputMaybe<StringFilter>;
+  /** Returns true if at least one of its inner filters is true, otherwise returns false */
+  or?: InputMaybe<Array<SermonsFilter>>;
+  preachedOn?: InputMaybe<DateFilter>;
+  preacher?: InputMaybe<StringFilter>;
+  publishAt?: InputMaybe<DatetimeFilter>;
+  scripture?: InputMaybe<StringFilter>;
+  series?: InputMaybe<StringFilter>;
+  title?: InputMaybe<StringFilter>;
+  videoUrl?: InputMaybe<StringFilter>;
+};
+
+export type SermonsOrderBy = {
+  audioPath?: InputMaybe<OrderByDirection>;
+  id?: InputMaybe<OrderByDirection>;
+  notes?: InputMaybe<OrderByDirection>;
+  preachedOn?: InputMaybe<OrderByDirection>;
+  preacher?: InputMaybe<OrderByDirection>;
+  publishAt?: InputMaybe<OrderByDirection>;
+  scripture?: InputMaybe<OrderByDirection>;
+  series?: InputMaybe<OrderByDirection>;
+  title?: InputMaybe<OrderByDirection>;
+  videoUrl?: InputMaybe<OrderByDirection>;
 };
 
 export type ServiceType =
@@ -343,7 +531,10 @@ export type NodeByIdQueryVariables = Exact<{
 }>;
 
 
-export type NodeByIdQuery = { node: never | null };
+export type NodeByIdQuery = { node:
+    | { __typename: 'ContentItems', nodeId: string }
+    | { __typename: 'Sermons', nodeId: string }
+   | null };
 
 
 export const NodeByIdDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"NodeById"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"nodeId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"node"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"nodeId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"nodeId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"__typename"}},{"kind":"Field","name":{"kind":"Name","value":"nodeId"}}]}}]}}]} as unknown as DocumentNode<NodeByIdQuery, NodeByIdQueryVariables>;

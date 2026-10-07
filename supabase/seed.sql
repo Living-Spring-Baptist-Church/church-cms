@@ -105,3 +105,21 @@ insert into public.program_participants (id, program_id, member_id)
 values
   ('b5000000-0000-4000-8000-000000000001', 'b2000000-0000-4000-8000-000000000001', '40000000-0000-4000-8000-000000000003'),
   ('b5000000-0000-4000-8000-000000000002', 'b2000000-0000-4000-8000-000000000001', '40000000-0000-4000-8000-000000000002');
+
+-- Content fixture (LBC-33): fake and small. Dates are fixed far from now so the fixture behaves the same on every reset:
+-- 2099 is "in the future" and 2025 is "already expired". The large demo content arrives with LBC-37.
+-- Authored by the demo content editor, approved by the demo pastor.
+insert into public.content_items (id, kind, slug, title, body, image_path, status, publish_at, expires_at, author_id, approved_by)
+values
+  ('c1000000-0000-4000-8000-000000000001', 'announcement', null, 'Harvest Thanksgiving Service', 'Join us for a demo service of thanksgiving. All are welcome.', null, 'published', '2026-09-01 00:00:00+00', '2099-01-01 00:00:00+00', '10000000-0000-4000-8000-000000000007', '10000000-0000-4000-8000-000000000002'),
+  ('c1000000-0000-4000-8000-000000000002', 'announcement', null, 'Draft: Youth Camp Registration', 'This demo draft is not ready yet.', null, 'draft', null, null, '10000000-0000-4000-8000-000000000007', null),
+  ('c1000000-0000-4000-8000-000000000003', 'announcement', null, 'Waiting for review: Choir Rehearsal Change', 'This demo item is waiting for the pastor.', null, 'in_review', null, null, '10000000-0000-4000-8000-000000000007', null),
+  ('c1000000-0000-4000-8000-000000000004', 'announcement', null, 'Scheduled: New Year Service', 'This demo announcement goes live in the future.', null, 'published', '2099-01-01 00:00:00+00', null, '10000000-0000-4000-8000-000000000007', '10000000-0000-4000-8000-000000000002'),
+  ('c1000000-0000-4000-8000-000000000005', 'announcement', null, 'Expired: Easter Rehearsal', 'This demo announcement ended long ago.', null, 'published', '2025-01-01 00:00:00+00', '2025-02-01 00:00:00+00', '10000000-0000-4000-8000-000000000007', '10000000-0000-4000-8000-000000000002'),
+  ('c1000000-0000-4000-8000-000000000006', 'quote', null, 'Psalm 23:1', 'The Lord is my shepherd; I shall not want.', null, 'published', '2026-09-28 00:00:00+00', null, '10000000-0000-4000-8000-000000000007', '10000000-0000-4000-8000-000000000002'),
+  ('c1000000-0000-4000-8000-000000000007', 'page', 'history', 'Our History', 'This demo page tells the story of the church.', null, 'published', '2026-01-01 00:00:00+00', null, '10000000-0000-4000-8000-000000000007', '10000000-0000-4000-8000-000000000002');
+
+insert into public.sermons (id, title, preacher, preached_on, series, scripture, notes, video_url, audio_path, status, publish_at, author_id, approved_by)
+values
+  ('c2000000-0000-4000-8000-000000000001', 'Walking in Faith', 'Demo Pastor', '2026-09-27', 'Faith Series', 'Hebrews 11:1', 'Demo notes: faith is confidence in what we hope for.', 'https://www.youtube.com/watch?v=demo0000000', 'sermons/walking-in-faith.mp3', 'published', '2026-09-28 00:00:00+00', '10000000-0000-4000-8000-000000000007', '10000000-0000-4000-8000-000000000002'),
+  ('c2000000-0000-4000-8000-000000000002', 'Draft: Grace Upon Grace', 'Demo Pastor', '2026-10-04', 'Grace Series', 'John 1:16', null, null, null, 'draft', null, '10000000-0000-4000-8000-000000000007', null);
