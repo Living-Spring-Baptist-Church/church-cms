@@ -40,3 +40,38 @@ values
   ('10000000-0000-4000-8000-000000000005', 'usher', null, '10000000-0000-4000-8000-000000000001'),
   ('10000000-0000-4000-8000-000000000006', 'department_head', '20000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000001'),
   ('10000000-0000-4000-8000-000000000007', 'content_editor', null, '10000000-0000-4000-8000-000000000001');
+
+-- Congregation fixture (LBC-26): a handful of fake people for manual testing and the seed sanity test.
+-- The full demo congregation of about 300 members arrives with LBC-37. All names, numbers and addresses are invented.
+insert into public.households (id, name, address)
+values
+  ('30000000-0000-4000-8000-000000000001', 'The Mensah Family', '12 Demo Street, Accra'),
+  ('30000000-0000-4000-8000-000000000002', 'The Owusu Family', '7 Sample Road, Kumasi'),
+  ('30000000-0000-4000-8000-000000000003', 'The Boateng Family', '3 Example Avenue, Takoradi');
+
+insert into public.members (
+  id, household_id, first_name, last_name, phone, email, date_of_birth, gender, marital_status, status,
+  first_visit_on, joined_on, archived_at
+)
+values
+  ('40000000-0000-4000-8000-000000000001', '30000000-0000-4000-8000-000000000001', 'Kwame', 'Mensah', '+233200000101', 'kwame.mensah@example.org', '1980-04-12', 'male', 'married', 'active', null, '2012-03-04', null),
+  ('40000000-0000-4000-8000-000000000002', '30000000-0000-4000-8000-000000000001', 'Ama', 'Mensah', '+233200000102', 'ama.mensah@example.org', '1983-09-03', 'female', 'married', 'active', null, '2012-03-04', null),
+  ('40000000-0000-4000-8000-000000000003', '30000000-0000-4000-8000-000000000001', 'Kofi', 'Mensah', null, null, '2014-06-20', 'male', null, 'active', null, '2014-07-06', null),
+  ('40000000-0000-4000-8000-000000000004', '30000000-0000-4000-8000-000000000002', 'Esi', 'Owusu', '+233200000104', 'esi.owusu@example.org', '1990-01-25', 'female', 'single', 'active', null, '2018-05-13', null),
+  ('40000000-0000-4000-8000-000000000005', '30000000-0000-4000-8000-000000000002', 'Yaw', 'Owusu', null, null, '2010-11-02', 'male', null, 'active', null, '2016-02-07', null),
+  ('40000000-0000-4000-8000-000000000006', null, 'Abena', 'Asante', '+233200000106', 'abena.asante@example.org', '1995-02-14', 'female', 'single', 'visitor', '2026-09-27', null, null),
+  ('40000000-0000-4000-8000-000000000007', '30000000-0000-4000-8000-000000000003', 'Kojo', 'Boateng', '+233200000107', 'kojo.boateng@example.org', '1975-08-30', 'male', 'married', 'inactive', null, '2005-01-09', null),
+  ('40000000-0000-4000-8000-000000000008', null, 'Akosua', 'Darko', '+233200000108', 'akosua.darko@example.org', '1968-12-05', 'female', 'widowed', 'transferred', null, '2001-06-10', '2026-01-15 09:00:00+00');
+
+-- Kojo Boateng belongs to two departments; Kofi Mensah is in the children's ministry, Yaw Owusu in Youth.
+insert into public.member_departments (member_id, department_id)
+values
+  ('40000000-0000-4000-8000-000000000003', '20000000-0000-4000-8000-000000000003'),
+  ('40000000-0000-4000-8000-000000000004', '20000000-0000-4000-8000-000000000001'),
+  ('40000000-0000-4000-8000-000000000005', '20000000-0000-4000-8000-000000000002'),
+  ('40000000-0000-4000-8000-000000000007', '20000000-0000-4000-8000-000000000001'),
+  ('40000000-0000-4000-8000-000000000007', '20000000-0000-4000-8000-000000000002');
+
+insert into public.visitor_followups (id, member_id, assigned_to, status, notes, due_on)
+values
+  ('50000000-0000-4000-8000-000000000001', '40000000-0000-4000-8000-000000000006', '10000000-0000-4000-8000-000000000004', 'pending', 'Demo follow-up: call after the first visit.', '2026-10-11');
