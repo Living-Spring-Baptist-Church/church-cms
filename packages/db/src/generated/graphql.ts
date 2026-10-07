@@ -202,6 +202,21 @@ export type IntListFilter = {
   overlaps?: InputMaybe<Array<Scalars['Int']['input']>>;
 };
 
+export type MemberStatus =
+  | 'active'
+  | 'deceased'
+  | 'inactive'
+  | 'transferred'
+  | 'visitor';
+
+/** Boolean expression comparing fields on type "MemberStatus" */
+export type MemberStatusFilter = {
+  eq?: InputMaybe<MemberStatus>;
+  in?: InputMaybe<Array<MemberStatus>>;
+  is?: InputMaybe<FilterIs>;
+  neq?: InputMaybe<MemberStatus>;
+};
+
 export type Node = {
   /** Retrieves a record by `ID` */
   nodeId: Scalars['ID']['output'];
