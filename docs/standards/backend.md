@@ -71,7 +71,7 @@ Every table, in the migration that creates it:
 - Money as `amount_minor bigint` + `currency char(3)`, with `check (amount_minor > 0)` and a `direction` where relevant
 - `alter table ... enable row level security;` plus explicit policies for each role in the PRD permission matrix
 - The audit trigger: `create trigger audit_<table> after insert or update or delete on public.<table> for each row execute function audit.record_change();` then `alter table public.<table> enable always trigger audit_<table>;` so `session_replication_role = replica` cannot skip it
-- A single `id` column even on link tables (for example `member_departments`, with `unique (member_id, department_id)`): `audit.record_change()` reads `id` from the row, so a composite primary key without `id` cannot be audited
+- A single `id` column even on link tables and one-row-per-parent tables (for example `member_departments` with `unique (member_id, department_id)`, and `attendance_counts` with `unique (service_id)`; the same applies to `attendance_checkins` and `program_participants`): `audit.record_change()` reads `id` from the row, so a composite primary key without `id` cannot be audited
 - Relationship names in GraphQL: every foreign key gets a `comment on constraint ... is e'@graphql({"foreign_name": "...", "local_name": "..."})'`. The `foreign_name` must differ from the inflected name of the foreign key column itself (`assigned_to` is `assignedTo`, so its relationship is `assignedStaff`), otherwise both fields share a name. List every field of the type in a pgTAP test to catch it.
 - Indexes on every foreign key and on columns used in common filters
 - `comment on table` and `comment on column` for anything exposed. These become the GraphQL API documentation.
@@ -85,6 +85,8 @@ Every table, in the migration that creates it:
 - Mark `stable` for reads (exposed as GraphQL queries) and `volatile` for writes (exposed as mutations). Getting this wrong puts the operation in the wrong place in the API.
 - When a function owns a business rule, the table's direct GraphQL insert/update is blocked by RLS so the function is the only path.
 - **Set-based SQL, no N+1.** Never loop over rows issuing a query per row. Use joins, `insert ... select`, `update ... from`, or `= any(p_ids)`.
+- pg_graphql exposes parameters with their `p_` prefix (`pServiceId`, `pMen`), so the frontend calls `recordAttendanceCounts(pServiceId: ...)`. A function that returns a set (`setof`) is run more than once by pg_graphql, which breaks any write: a mutation returns one row (`returns public.<table>`) or a scalar such as a count, never a set.
+- A write function that nobody may reach through the table (no insert or update grant, as for `attendance_counts`) is the only write path, so its role check is the gate: check the role first, then validate, then look the record up.
 - No dynamic SQL. If ever unavoidable, only with `format('%I', ...)` / `%L`, never string concatenation.
 
 ## 6. No magic values in SQL
