@@ -252,7 +252,7 @@ select is(pg_temp.type_fields('MemberNames'),
   '["firstName", "id", "lastName", "nodeId", "status"]'::jsonb,
   'should list exactly these fields on MemberNames');
 select is(pg_temp.type_fields('Staff'),
-  '["assignedVisitorFollowupsCollection", "createdAt", "fullName", "grantedRolesCollection", "id", "isActive", "ledProgramsCollection", "member", "memberId", "nodeId", "phone", "recordedAttendanceCheckinsCollection", "recordedAttendanceCountsCollection", "staffRolesCollection", "updatedAt"]'::jsonb,
+  '["approvedContentItemsCollection", "approvedSermonsCollection", "assignedVisitorFollowupsCollection", "authoredContentItemsCollection", "authoredSermonsCollection", "createdAt", "fullName", "grantedRolesCollection", "id", "isActive", "ledProgramsCollection", "member", "memberId", "nodeId", "phone", "recordedAttendanceCheckinsCollection", "recordedAttendanceCountsCollection", "staffRolesCollection", "updatedAt"]'::jsonb,
   'should list exactly these fields on Staff, now that it links to a member');
 select is(pg_temp.type_fields('Departments'),
   '["archivedAt", "id", "isChildrensMinistry", "memberDepartmentsCollection", "name", "nodeId", "programsCollection", "staffRolesCollection"]'::jsonb,
