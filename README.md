@@ -13,7 +13,7 @@ A pnpm + Turborepo monorepo with two Next.js App Router apps (the staff dashboar
 | `packages/db`        | `@lbc/db`        | Pinned Supabase CLI and generated database types                       |
 | `packages/providers` | `@lbc/providers` | SMS, email, payment and monitoring adapters (stub, ADR-016)            |
 
-The database lives in `supabase/` at the root, where the Supabase CLI requires it: `config.toml`, `migrations/`, pgTAP `tests/`, `seed.sql` and edge `functions/`.
+The database lives in `supabase/` at the root, where the Supabase CLI requires it: `config.toml`, `migrations/`, pgTAP `tests/`, `seed.sql`, `seed.local-auth.sql` (local sign in only, run by `pnpm db:seed-local-auth`) and edge `functions/`.
 
 ## Prerequisites
 
@@ -98,19 +98,59 @@ To preview a production build locally, build first, then run `pnpm --filter @lbc
 
 ## GraphQL
 
-Operations live in `graphql/queries/` and `graphql/mutations/` as `.graphql` files. The pg_graphql schema is exported to `graphql/schema.graphql`, and GraphQL Code Generator writes typed documents to `packages/db/src/generated/graphql.ts`. Both are committed and marked generated: never edit them by hand.
+Operations live in `graphql/` as `.graphql` files. What the API exposes depends on the database role, so there are two schemas, each with its own operations and generated file. All of them are committed and marked generated: never edit them by hand.
+
+| Audience        | Schema (exported as)                                 | Operations                                                   | Generated types (import from)                                  |
+| --------------- | ---------------------------------------------------- | ------------------------------------------------------------ | -------------------------------------------------------------- |
+| Public site     | `graphql/schema.graphql` (`anon`)                    | `graphql/queries/`, `graphql/mutations/`                     | `packages/db/src/generated/graphql.ts` (`@lbc/db`)             |
+| Staff dashboard | `graphql/dashboard.schema.graphql` (`authenticated`) | `graphql/dashboard/queries/`, `graphql/dashboard/mutations/` | `packages/db/src/generated/dashboard.ts` (`@lbc/db/dashboard`) |
+
+Dashboard operations need their own schema because functions such as `logAuditEvent` are granted to `authenticated` only, so they are absent from the `anon` schema.
 
 | Command              | What it does                                                                                            |
 | -------------------- | ------------------------------------------------------------------------------------------------------- |
-| `pnpm schema:export` | Refreshes `graphql/schema.graphql` from the running local database (`pnpm db:start` first)              |
+| `pnpm schema:export` | Refreshes both schema files from the running local database (`pnpm db:start` first)                     |
 | `pnpm codegen`       | Runs `schema:export`, then generates the types. Without Docker it keeps the committed schema            |
 | `pnpm codegen:check` | Regenerates and fails if the generated files differ from Git. CI only: it fails on any uncommitted tree |
 
 `pnpm verify` runs `pnpm codegen:check` (see Quality commands). For full coverage of "CI fails if generated types are out of date", CI runs, in order: `supabase db reset`, `pnpm schema:export --require-database` (fails instead of skipping when the database is down), then `pnpm codegen:check`. That catches both a schema that drifted from the migrations and types that drifted from the schema.
 
-The export runs the introspection query inside Postgres as the `anon` role (`docker exec psql` and `graphql.resolve()`). It needs no API key, and the service role key is never used. It turns pg_graphql introspection on inside a transaction that is rolled back, because introspection is off by default.
+The export runs the introspection query inside Postgres, once as the `anon` role and once as `authenticated` (`docker exec psql` and `graphql.resolve()`). It needs no API key, and the service role key is never used. It turns pg_graphql introspection on inside a transaction that is rolled back, because introspection is off by default.
 
-The client is urql (ADR-015). `apps/dashboard/src/config/graphql-client.ts` sends the signed-in user's access token as the bearer and the anon key as `apikey`.
+The client is urql (ADR-015). `apps/dashboard/src/config/graphql-client.ts` sends the signed-in user's access token as the bearer and the anon key as `apikey`, and turns every failure into a typed `AppError` through `runQuery` and `runMutation`.
+
+pg_graphql carries the `JSON` scalar as a serialized string: pass `JSON.stringify(value)` for a `JSON` variable, not an object.
+
+## Staff sign in (LBC-18)
+
+The dashboard signs staff in with email and password, then a six digit code from an authenticator app (Supabase Auth TOTP). Super admin, pastor and treasurer must have two-factor and are walked through setting it up at their first sign in (QR code and a manual key). Other roles can add it from `/account/security`. A session ends after 30 minutes without a request (`IDLE_TIMEOUT_MINUTES`, SET-04), and the sign out button is in the header of every dashboard page.
+
+- The auth provider is only imported in `packages/providers/src/auth/` (rule 6). The dashboard uses the `AuthPort` interface from `@lbc/providers`.
+- `apps/dashboard/src/proxy.ts` (Next.js 16's name for middleware) validates the session on every request, enforces the idle limit with an httpOnly `lbc_last_activity` cookie, and redirects visitors who have not finished signing in. `requireStaff()` then checks, through GraphQL as the user, that the account is active and that roles needing two-factor are at aal2.
+- Every login is written to the audit log with `logAuditEvent` after the session is complete (aal2 where required). Failed logins cannot be logged: `anon` may not call it.
+- Rate limiting of passwords and codes is Supabase Auth's (`[auth.rate_limit]` in `supabase/config.toml`).
+
+### Signing in locally (development only)
+
+`pnpm db:seed-local-auth` loads `supabase/seed.local-auth.sql` into the **local** database container and gives every `@demo.church` staff member the password **`Dev-Only-Passw0rd`** (it meets the local password policy), so you can sign in as `super-admin@`, `pastor@`, `treasurer@`, `secretary@`, `usher@`, `department-head@` or `content-editor@demo.church`. This repository is public, so that password is not a secret and protects nothing. The file is deliberately **not** in `[db.seed] sql_paths`, so a reset, a push with seed data and CI never load it. The script only talks to the Docker container named after `project_id` and refuses to run when that container is not running. Order: `pnpm db:start`, `pnpm db:reset`, `pnpm db:seed-local-auth` (repeat the last two after every reset). Local sign in needs the Auth, API gateway and REST containers, so start the stack with:
+
+```
+pnpm db:start -x realtime,storage-api,imgproxy,mailpit,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
+```
+
+Put the local URL and anon key from `pnpm db:status` in `apps/dashboard/.env.local`, then `pnpm --filter @lbc/dashboard dev`. `next build` of the dashboard also needs `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` in the environment, because the app reads them when it starts. Authenticator codes need a real authenticator app (or any RFC 6238 SHA-1, 6 digit, 30 second generator) fed with the setup key.
+
+### Hosted Auth settings (set in the Supabase dashboard)
+
+`supabase/config.toml` only configures the **local** stack. A hosted project does not read it, so these settings must be applied by hand in the dashboard (Authentication) for the demo and, later, production:
+
+- **Sign-ups: off** ("Allow new users to sign up" in Authentication, Sign In / Providers). Staff are provisioned by a super admin (LBC-19), never by self sign-up. Keep the **Email provider enabled**: in `config.toml` its `[auth.email] enable_signup` switch is the provider switch, and setting it to false makes every sign in fail with "Email logins are disabled". Locally, `[auth] enable_signup = false` is what blocks sign-up.
+- **TOTP two-factor: on** (Authentication, Multi-Factor, enrol and verify).
+- **Email**: confirmations on for invited staff, with real email delivery configured before invites are sent. Local uses no confirmations.
+- **Password policy** (PRD NFR "strong password rules"): minimum length 12, letters and digits with upper and lower case (`lower_upper_letters_digits`). The local config uses the same. Leaked password protection is a Pro plan feature: enable it when the plan allows.
+- **Refresh token rotation: on**, with the reuse interval at the default 10 seconds. **JWT expiry**: 3600 seconds (one hour). The 30 minute idle limit is enforced by the dashboard itself.
+- **Rate limits**: keep Supabase's defaults for sign in and token verification. They are the brake on password and code guessing.
+- Never load `supabase/seed.local-auth.sql` into a hosted project.
 
 ## Continuous integration
 
