@@ -1,0 +1,18 @@
+query CurrentStaff($staffId: UUID!) {
+  staffCollection(filter: { id: { eq: $staffId } }, first: 1) {
+    edges {
+      node {
+        id
+        fullName
+        isActive
+        staffRolesCollection {
+          edges {
+            node {
+              role
+            }
+          }
+        }
+      }
+    }
+  }
+}

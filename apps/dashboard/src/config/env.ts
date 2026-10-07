@@ -1,25 +1,33 @@
+import { z } from "zod";
+
 const SUPABASE_URL_VARIABLE = "NEXT_PUBLIC_SUPABASE_URL";
 const SUPABASE_ANON_KEY_VARIABLE = "NEXT_PUBLIC_SUPABASE_ANON_KEY";
+
+const publicEnvSchema = z.object({
+  [SUPABASE_URL_VARIABLE]: z.url({
+    error: `Missing or invalid environment variable ${SUPABASE_URL_VARIABLE}. See .env.example.`,
+  }),
+  [SUPABASE_ANON_KEY_VARIABLE]: z
+    .string({
+      error: `Missing environment variable ${SUPABASE_ANON_KEY_VARIABLE}. See .env.example.`,
+    })
+    .min(1, {
+      error: `Missing environment variable ${SUPABASE_ANON_KEY_VARIABLE}. See .env.example.`,
+    }),
+});
 
 export type PublicEnv = {
   readonly supabaseUrl: string;
   readonly supabaseAnonKey: string;
 };
 
-function requireVariable(
-  variableName: string,
-  source: Readonly<Record<string, string | undefined>>,
-) {
-  const variableValue = source[variableName];
-  if (!variableValue) {
-    throw new Error(`Missing environment variable ${variableName}. See .env.example.`);
-  }
-  return variableValue;
-}
-
 export function readPublicEnv(source: Readonly<Record<string, string | undefined>>): PublicEnv {
+  const parsed = publicEnvSchema.safeParse(source);
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues.map((issue) => issue.message).join(" "));
+  }
   return {
-    supabaseUrl: requireVariable(SUPABASE_URL_VARIABLE, source),
-    supabaseAnonKey: requireVariable(SUPABASE_ANON_KEY_VARIABLE, source),
+    supabaseUrl: parsed.data[SUPABASE_URL_VARIABLE],
+    supabaseAnonKey: parsed.data[SUPABASE_ANON_KEY_VARIABLE],
   };
 }

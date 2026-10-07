@@ -48,9 +48,9 @@ apps/dashboard/src/
     errors/                          AppError, error classification, error-messages.data.ts
   config/
     graphql-client.ts                the one GraphQL client (auth header + error handling)
-    env.ts                           environment variables validated at startup (by hand for now; moves to Zod when it is added)
+    env.ts                           environment variables validated at startup with Zod
   helpers/<domain>.utils.ts          pure functions (dates, money, pagination, strings)
-  middleware.ts                      redirects unauthenticated users to /login
+  proxy.ts                           redirects unauthenticated users to /login (Next.js 16 name for middleware.ts)
 ```
 
 **Centralize by domain, never nest per feature.** A `features/<domain>/` folder contains only components and their tests. It never grows its own `types/`, `data/`, `services/`, `schemas/` or `utils/` folders; those belong in `core/` and `helpers/`, grouped by the same domain names everywhere (`members`, `attendance`, `content`, `finance`, `settings`, `audit`).
@@ -159,7 +159,7 @@ client component form (React Hook Form + Zod)
 
 - `app/` contains route files only. A `page.tsx` fetches through a service and composes feature components: typically under 40 lines.
 - Every route segment with data has a `loading.tsx` skeleton and relies on the nearest `error.tsx`.
-- Authentication: `middleware.ts` redirects unauthenticated users to `/login`. Authorization: each protected page or layout calls `requireRole(ALLOWED_ROLES)` from `@core/auth`, and the database enforces it again with RLS.
+- Authentication: `proxy.ts` (called `middleware.ts` before Next.js 16) redirects unauthenticated users to `/login`. Authorization: each protected page or layout calls `requireRole(ALLOWED_ROLES)` from `@core/auth`, and the database enforces it again with RLS.
 - Route paths are constants in `core/data/routes.data.ts`; never hand-type `"/members"` in a link.
 
 ## 8. Barrels (`index.ts`)
@@ -322,6 +322,11 @@ Record real deviations here as they are discovered, with the majority pattern to
 - Node command line scripts under `scripts/` report through `console` (the root ESLint config turns `no-console` off for them), so they are exempt from the logger rule in CLAUDE.md. App and package code still uses the logger.
 
 ---
+
+- Next.js 16 renamed `middleware.ts` to `proxy.ts` (export `proxy`, Node.js runtime). Use `proxy.ts`. A proxy matcher does not cover server actions on excluded paths, so each server action also checks the session itself.
+- The GraphQL schema depends on the database role, so there are two: `graphql/schema.graphql` (anon, public site, operations in `graphql/queries/`) and `graphql/dashboard.schema.graphql` (authenticated, dashboard, operations in `graphql/dashboard/queries/` and `graphql/dashboard/mutations/`, imported from `@lbc/db/dashboard`). Put a new operation in the folder of the role that calls it.
+- Every page, server action and route handler that reads or writes data must call `requireStaff()` (later `requireRole`) itself: layouts are skipped by soft navigation between sibling pages, so a layout check alone is not a guard.
+- `requireStaff()` in `@core/auth/session` is the guard that layouts and pages call today; `requireRole(ALLOWED_ROLES)` arrives with the role based shell (LBC-20) and builds on it.
 
 ## Frontend checklist
 

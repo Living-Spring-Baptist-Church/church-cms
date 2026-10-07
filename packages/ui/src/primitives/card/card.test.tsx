@@ -13,7 +13,7 @@ import { CardTitle } from "./card-title";
 
 type SampleCardProps = {
   onAction?: () => void;
-  titleLevel?: "h2" | "h3" | "h4";
+  titleLevel?: "h1" | "h2" | "h3" | "h4";
 };
 
 function SampleCard({ onAction, titleLevel }: SampleCardProps) {
@@ -53,6 +53,12 @@ describe("Card", () => {
     render(<SampleCard titleLevel="h2" />);
 
     expect(screen.getByRole("heading", { level: 2, name: "Sunday service" })).toBeInTheDocument();
+  });
+
+  it("should render the title as the page heading when it is the only one", () => {
+    render(<SampleCard titleLevel="h1" />);
+
+    expect(screen.getByRole("heading", { level: 1, name: "Sunday service" })).toBeInTheDocument();
   });
 
   it("should apply card surface tokens and merge a custom class name", () => {

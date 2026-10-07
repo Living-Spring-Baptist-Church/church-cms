@@ -3,7 +3,11 @@
 // generated types being regenerated and committed, the working tree differs and this exits 1.
 import { execFileSync } from "node:child_process";
 
-const GENERATED_PATHS = ["graphql/schema.graphql", "packages/db/src/generated"];
+const GENERATED_PATHS = [
+  "graphql/schema.graphql",
+  "graphql/dashboard.schema.graphql",
+  "packages/db/src/generated",
+];
 
 const changedFiles = execFileSync("git", ["status", "--porcelain", "--", ...GENERATED_PATHS], {
   encoding: "utf8",

@@ -11,4 +11,5 @@ docs/
 
 # Generated GraphQL schema export and types (pnpm codegen). Never edit by hand.
 graphql/schema.graphql
+graphql/dashboard.schema.graphql
 packages/db/src/generated/
