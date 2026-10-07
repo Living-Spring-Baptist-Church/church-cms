@@ -284,6 +284,23 @@ type Query {
   ): Node
 }
 
+enum ServiceType {
+  sunday
+  midweek
+  special
+  program
+}
+
+"""
+Boolean expression comparing fields on type "ServiceType"
+"""
+input ServiceTypeFilter {
+  eq: ServiceType
+  in: [ServiceType!]
+  is: FilterIs
+  neq: ServiceType
+}
+
 """
 Boolean expression comparing fields on type "String"
 """

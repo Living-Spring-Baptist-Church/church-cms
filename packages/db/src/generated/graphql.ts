@@ -260,6 +260,20 @@ export type QueryNodeArgs = {
   nodeId: Scalars['ID']['input'];
 };
 
+export type ServiceType =
+  | 'midweek'
+  | 'program'
+  | 'special'
+  | 'sunday';
+
+/** Boolean expression comparing fields on type "ServiceType" */
+export type ServiceTypeFilter = {
+  eq?: InputMaybe<ServiceType>;
+  in?: InputMaybe<Array<ServiceType>>;
+  is?: InputMaybe<FilterIs>;
+  neq?: InputMaybe<ServiceType>;
+};
+
 /** Boolean expression comparing fields on type "String" */
 export type StringFilter = {
   eq?: InputMaybe<Scalars['String']['input']>;
