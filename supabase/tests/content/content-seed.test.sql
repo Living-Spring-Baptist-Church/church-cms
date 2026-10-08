@@ -6,11 +6,15 @@ begin;
 
 select plan(9);
 
+-- The expiry job may or may not have run since the last reset, so run it now: the expired seed item is archived either way.
+select set_config('request.jwt.claims', '', true);
+select private.archive_expired_content();
+
 select is((select count(*) from public.content_items), 7::bigint, 'should seed seven content items');
 select is((select count(*) from public.sermons), 2::bigint, 'should seed two sermons');
 select is(
   (select string_agg(status::text, ',' order by status) from public.content_items where kind = 'announcement'),
-  'draft,in_review,published,published,published', 'should seed announcements in every state of the flow, a scheduled one and an expired one');
+  'draft,in_review,published,published,archived', 'should seed announcements in every state of the flow, a scheduled one and an expired one (archived by the expiry job)');
 select is((select slug from public.content_items where kind = 'page'), 'history', 'should seed a history page with its slug');
 
 create function pg_temp.anon_titles(p_relation text)
