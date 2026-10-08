@@ -167,15 +167,21 @@ update public.members set household_id = 'd4000000-0000-4000-8000-000000000004' 
 insert into public.services (id, name, type, starts_at)
 values ('d5000000-0000-4000-8000-000000000001', 'QA Service', 'sunday', now());
 
--- Households a secretary cannot see must not become visible by moving someone into them (known gap, tracked as TODO)
-select todo_start('moving a person into a household by id reveals it: QA bug 1');
-select is(pg_temp.try_as('secretary', $$update public.members set household_id = 'd4000000-0000-4000-8000-000000000002' where first_name = 'ChildKids'$$), '42501', 'should not let the secretary move a child into a household she cannot see');
-select is(pg_temp.try_as('secretary', $$insert into public.members (first_name, last_name, adult_confirmed, household_id) values ('HouseProbe', 'Test', true, 'd4000000-0000-4000-8000-000000000002')$$), '42501', 'should not let the secretary register an adult into a household she cannot see');
+-- Households a secretary cannot see must not become visible by moving someone into them
+select is(pg_temp.try_as('secretary', $$update public.members set household_id = 'd4000000-0000-4000-8000-000000000002' where first_name = 'ChildKids'$$), 'AUTH_FORBIDDEN', 'should not let the secretary move a child into a household she cannot see');
+select is(pg_temp.try_as('secretary', $$insert into public.members (first_name, last_name, adult_confirmed, household_id) values ('HouseProbe', 'Test', true, 'd4000000-0000-4000-8000-000000000002')$$), 'AUTH_FORBIDDEN', 'should not let the secretary register an adult into a household she cannot see');
 select is(pg_temp.seen_as('secretary', 'public.households', 'name') like '%YouthOnly%', false, 'should keep the youth-only household hidden from the secretary');
-select is(pg_temp.try_as('head_children', $$update public.members set household_id = 'd4000000-0000-4000-8000-000000000002' where first_name = 'ChildKids'$$), '42501', 'should not let the ministry head move a child into a household that is not theirs to see');
+select is(pg_temp.try_as('head_children', $$update public.members set household_id = 'd4000000-0000-4000-8000-000000000002' where first_name = 'ChildKids'$$), 'AUTH_FORBIDDEN', 'should not let the ministry head move a child into a household that is not theirs to see');
 select is(pg_temp.seen_as('secretary', 'public.households', 'name') like '%YouthOnly%', false, 'should still hide the youth-only household after the head tried to move a child in');
+select is(pg_temp.try_as('secretary', $$update public.members set household_id = 'd4000000-0000-4000-8000-000000000003' where first_name = 'ChildKids'$$), 'ok:1', 'should let the secretary move a child into an empty household');
+select is(pg_temp.try_as('secretary', $$update public.members set household_id = 'd4000000-0000-4000-8000-000000000001' where first_name = 'ChildKids'$$), 'ok:1', 'should let the secretary move a child into a household that holds an adult');
+select is(pg_temp.try_as('secretary', $$insert into public.members (first_name, last_name, adult_confirmed, household_id) values ('HouseOk', 'Test', true, 'd4000000-0000-4000-8000-000000000001')$$), 'ok:1', 'should let the secretary register an adult into a visible household');
+select is(pg_temp.try_as('super_admin', $$update public.members set household_id = 'd4000000-0000-4000-8000-000000000002' where first_name = 'ChildNursery'$$), 'ok:1', 'should let the super admin place a person in any household');
+update public.members set household_id = null where first_name = 'ChildNursery';
+select is(pg_temp.try_as('head_children', $$update public.members set household_id = null where first_name = 'ChildKids'$$), 'ok:1', 'should let the ministry head clear a household');
+select is(pg_temp.try_as('head_children', $$update public.members set household_id = 'd4000000-0000-4000-8000-000000000001' where first_name = 'ChildNursery'$$), 'ok:0', 'should not let the ministry head touch a child of another ministry');
+update public.members set household_id = 'd4000000-0000-4000-8000-000000000001' where first_name = 'ChildKids';
 
-select todo_end();
 
 -- Attendance
 select is(pg_temp.try_as('secretary', $$insert into public.attendance_checkins (service_id, member_id, checked_in_by) select 'd5000000-0000-4000-8000-000000000001', 'd3000000-0000-4000-8000-000000000002', id from public.staff where full_name = 'secretary'$$), 'ok:1', 'should let the secretary check in a ministry child');

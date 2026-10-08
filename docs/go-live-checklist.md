@@ -56,7 +56,7 @@ Everything here must be true **before any real member, child or financial data i
 - [ ] Data protection consent wording agreed with the church and stored with `consent_recorded_at`.
 - [ ] **Retention** decided: finance audit rows are kept 7 years.
 - [ ] **Anonymisation procedure for `audit.log` defined.** It does not exist yet and needs a migration, so a member can be erased without breaking the audit trail.
-- [ ] Children's records rules in place (LBC-42): only the allowed roles create and edit (super admin, the secretary and the children's ministry heads, only for children of a children's ministry department), every change is audit logged, ushers never see children's names. Tested by `supabase/tests/members/childrens-records-access.test.sql`.
+- [ ] Children's records rules in place (LBC-42): only the allowed roles create and edit (super admin, the secretary and the children's ministry heads, only for children of a children's ministry department), every change is audit logged, ushers never see children's names. Tested by `supabase/tests/members/childrens-records-access.test.sql`. Only a super admin can change an existing minor into an adult, and nobody else can place a member in a household they cannot see.
 - [ ] Visitor rule works: with no birth date and no "adult confirmed" tick, the visitor is treated as a minor (LBC-42). Check with the church that the registration form asks for one of the two.
 
 ## Operations

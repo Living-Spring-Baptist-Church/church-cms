@@ -350,7 +350,7 @@ select is(
 
 select is(pg_temp.try_as('head_children', $$update public.members set phone = '+233200000558' where first_name = 'AdultA'$$), 'ok:0', 'should keep the ministry head from editing an adult');
 select is(pg_temp.try_as('secretary', $$update public.members set phone = '+233200000559' where first_name = 'AdultA'$$), 'ok:1', 'should still let the secretary edit an adult');
-select is(pg_temp.try_as('head_children', format($$update public.members set date_of_birth = %L where first_name = 'ChildKids'$$, current_date - interval '30 years')), '42501', 'should refuse a ministry head turning a child into an adult');
+select is(pg_temp.try_as('head_children', format($$update public.members set date_of_birth = %L where first_name = 'ChildKids'$$, current_date - interval '30 years')), 'AUTH_FORBIDDEN', 'should refuse a ministry head turning a child into an adult');
 select is(pg_temp.try_as('head_children', $$update public.members set archived_at = now() where first_name = 'ChildKids'$$), '42501', 'should refuse a ministry head archiving a child, who would then vanish from their view');
 select is(pg_temp.try_as('head_children', $$update public.members set id = gen_random_uuid() where first_name = 'ChildKids'$$), '42501', 'should not let a head change a member id');
 select is(pg_temp.try_as('head_children', $$delete from public.members where first_name = 'ChildKids'$$), '42501', 'should not let a head delete a child');

@@ -479,7 +479,7 @@ using (status = 'published' and publish_at <= now()
 
 **Names-only access.** Ushers and the treasurer need member names (for check-in and tithes) but not phone numbers or addresses. RLS works on rows, not columns, so they get no policy on `members` and instead read a narrow `member_names` view (id, first and last name, status) that checks their role itself.
 
-**Children's records (LBC-42).** `private.is_minor(date_of_birth, adult_confirmed)` decides who is a minor: a known date of birth decides on its own (under `private.age_of_majority()`); with no date of birth the person is an adult only when an office user ticked `adult_confirmed` at registration, otherwise a minor. Only super admin and secretary can set `adult_confirmed` (a `before` trigger, because column grants cannot tell roles apart). Who sees and writes minors:
+**Children's records (LBC-42).** `private.is_minor(date_of_birth, adult_confirmed)` decides who is a minor: a known date of birth decides on its own (under `private.age_of_majority()`); with no date of birth the person is an adult only when an office user ticked `adult_confirmed` at registration, otherwise a minor. Only super admin and secretary can set `adult_confirmed` (a `before` trigger, because column grants cannot tell roles apart). Who sees and writes minors: Only a super admin can change an existing minor into an adult (`date_of_birth` or `adult_confirmed`, trigger `members_guard_minor_conversion`); everyone else gets AUTH_FORBIDDEN, and the secretary still registers new adults and corrects dates that keep the same state. `household_id` may be set only to null, unchanged or a household the caller can see (trigger `members_guard_household`; ministry heads cannot set one).
 
 | Role | Reads | Writes |
 | --- | --- | --- |
