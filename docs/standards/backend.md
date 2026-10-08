@@ -160,6 +160,7 @@ raise exception using
 - Every policy: allowed and denied cases for each role touched.
 - Every finance rule: the success case and every failure case (closed period, self-approval, same counter, double reversal, deposit not counted as income).
 - A structural test fails if any `public` table lacks RLS, policies or a complete audit trigger (row-level AFTER INSERT OR UPDATE OR DELETE running `audit.record_change()`, enabled for normal sessions). It is `supabase/tests/structure/public-tables-security.test.sql`. `audit.log` immutability (UPDATE, DELETE and TRUNCATE refused for every role) is tested in `supabase/tests/audit/`.
+- Tests must not rely on seed rows that time or jobs can change. A pg_cron job (`archive-expired-content`, every 15 minutes) or a passing `publish_at` or `expires_at` can alter a seeded row between `db reset` and `db test`. Insert the rows a test depends on inside the test transaction, or call the job function (`private.archive_expired_content()`) or neutralise the seed row explicitly first, so the result is the same right after a reset, after the job ran and after a cron tick. Seed dates must stay far from now (2025 or 2099 style), never relative to `now()`.
 - Edge functions and providers: Vitest-style tests with the same rules as the frontend (colocated, BDD names, 80% coverage, no real network).
 
 ## 11. Edge functions and providers
