@@ -6,7 +6,7 @@
 
 begin;
 
-select plan(287);
+select plan(290);
 
 -- Fixture: start from an empty congregation, events and identity model so the demo seed cannot influence the results.
 set local session_replication_role = replica;
@@ -199,14 +199,16 @@ from (values
 ) as ids (id, service_id);
 
 -- Check-ins: c1 usher checked in AdultChoir, c2 secretary checked in AdultNone, c3 super admin checked in
--- MinorChildren at SundayPast, c4 super admin checked in MinorChildren at the children's event.
+-- MinorChildren at SundayPast, c4 super admin checked in MinorChildren at the children's event, c5 super admin
+-- checked in MinorChoir (a minor outside the children's ministry) at SundayPast.
 insert into public.attendance_checkins (id, service_id, member_id, checked_in_by)
 select ids.id, ids.service_id, ids.member_id, (select staff_id from actors where label = ids.actor)
 from (values
   ('bb400000-0000-4000-8000-000000000001'::uuid, 'bb200000-0000-4000-8000-000000000001'::uuid, '60000000-0000-4000-8000-000000000001'::uuid, 'usher'),
   ('bb400000-0000-4000-8000-000000000002'::uuid, 'bb200000-0000-4000-8000-000000000001'::uuid, '60000000-0000-4000-8000-000000000003'::uuid, 'secretary'),
   ('bb400000-0000-4000-8000-000000000003'::uuid, 'bb200000-0000-4000-8000-000000000001'::uuid, '60000000-0000-4000-8000-000000000005'::uuid, 'super_admin'),
-  ('bb400000-0000-4000-8000-000000000004'::uuid, 'bb200000-0000-4000-8000-000000000005'::uuid, '60000000-0000-4000-8000-000000000005'::uuid, 'super_admin')
+  ('bb400000-0000-4000-8000-000000000004'::uuid, 'bb200000-0000-4000-8000-000000000005'::uuid, '60000000-0000-4000-8000-000000000005'::uuid, 'super_admin'),
+  ('bb400000-0000-4000-8000-000000000005'::uuid, 'bb200000-0000-4000-8000-000000000001'::uuid, '60000000-0000-4000-8000-000000000006'::uuid, 'super_admin')
 ) as ids (id, service_id, member_id, actor);
 
 -- Participants: ChoirProgram has AdultChoir and MinorChoir, ChildrenProgram has MinorChildren and AdultChoir,
@@ -237,14 +239,14 @@ values
   ('usher', 'attendance_counts', 3), ('usher_and_pastor', 'attendance_counts', 3), ('usher_and_head_children', 'attendance_counts', 3),
   ('head_choir', 'attendance_counts', 1), ('head_youth', 'attendance_counts', 0), ('head_children', 'attendance_counts', 1),
   ('head_choir_and_children', 'attendance_counts', 2),
-  -- attendance_checkins: 4 rows, each visible only together with its member
-  ('super_admin', 'attendance_checkins', 4), ('pastor', 'attendance_checkins', 4), ('usher_and_pastor', 'attendance_checkins', 4),
-  ('secretary', 'attendance_checkins', 2),
+  -- attendance_checkins: 5 rows, each visible only together with its member (the secretary sees the child of the children's ministry)
+  ('super_admin', 'attendance_checkins', 5), ('pastor', 'attendance_checkins', 5), ('usher_and_pastor', 'attendance_checkins', 5),
+  ('secretary', 'attendance_checkins', 4),
   ('usher', 'attendance_checkins', 1), ('usher_and_head_children', 'attendance_checkins', 1),
   ('head_children', 'attendance_checkins', 1), ('head_choir_and_children', 'attendance_checkins', 1),
   -- program_participants: 5 rows, each visible only together with its member
   ('super_admin', 'program_participants', 5), ('pastor', 'program_participants', 5), ('usher_and_pastor', 'program_participants', 5),
-  ('secretary', 'program_participants', 3),
+  ('secretary', 'program_participants', 4),
   ('head_choir', 'program_participants', 1), ('head_youth', 'program_participants', 1), ('head_children', 'program_participants', 1),
   ('head_choir_and_children', 'program_participants', 3), ('usher_and_head_children', 'program_participants', 1);
 
@@ -422,12 +424,16 @@ select is(
   pg_temp.run_as('secretary', format($$insert into public.attendance_checkins (service_id, member_id, checked_in_by) values ('bb200000-0000-4000-8000-000000000002', '60000000-0000-4000-8000-000000000003', %L)$$, (select staff_id from actors where label = 'secretary'))),
   1::bigint, 'should let the secretary check in an adult');
 
+select is(
+  pg_temp.run_as('secretary', format($$insert into public.attendance_checkins (service_id, member_id, checked_in_by) values ('bb200000-0000-4000-8000-000000000002', '60000000-0000-4000-8000-000000000005', %L)$$, (select staff_id from actors where label = 'secretary'))),
+  1::bigint, 'should let the secretary check in a child of the children''s ministry');
+
 select throws_ok(
-  pg_temp.attempt('secretary', format($$insert into public.attendance_checkins (service_id, member_id, checked_in_by) values ('bb200000-0000-4000-8000-000000000002', '60000000-0000-4000-8000-000000000005', %L)$$, (select staff_id from actors where label = 'secretary'))),
-  '42501', null, 'should not let the secretary check in a child');
+  pg_temp.attempt('secretary', format($$insert into public.attendance_checkins (service_id, member_id, checked_in_by) values ('bb200000-0000-4000-8000-000000000002', '60000000-0000-4000-8000-000000000006', %L)$$, (select staff_id from actors where label = 'secretary'))),
+  '42501', null, 'should not let the secretary check in a minor outside the children''s ministry');
 
 select is(
-  pg_temp.run_as('super_admin', format($$insert into public.attendance_checkins (service_id, member_id, checked_in_by) values ('bb200000-0000-4000-8000-000000000002', '60000000-0000-4000-8000-000000000005', %L)$$, (select staff_id from actors where label = 'super_admin'))),
+  pg_temp.run_as('super_admin', format($$insert into public.attendance_checkins (service_id, member_id, checked_in_by) values ('bb200000-0000-4000-8000-000000000002', '60000000-0000-4000-8000-000000000006', %L)$$, (select staff_id from actors where label = 'super_admin'))),
   1::bigint, 'should let the super admin check in a child');
 
 select throws_ok(
@@ -444,8 +450,9 @@ select is(pg_temp.run_as('usher', $$delete from public.attendance_checkins where
 select is(pg_temp.run_as('usher', $$delete from public.attendance_checkins where id = 'bb400000-0000-4000-8000-000000000002'$$), 0::bigint, 'should not let an usher remove a check-in made by someone else');
 select is(pg_temp.run_as('usher', $$delete from public.attendance_checkins where id = 'bb400000-0000-4000-8000-000000000003'$$), 0::bigint, 'should not let an usher remove the check-in of a child');
 select is(pg_temp.run_as('secretary', $$delete from public.attendance_checkins where id = 'bb400000-0000-4000-8000-000000000002'$$), 1::bigint, 'should let the secretary remove the check-in of an adult');
-select is(pg_temp.run_as('secretary', $$delete from public.attendance_checkins where id = 'bb400000-0000-4000-8000-000000000003'$$), 0::bigint, 'should not let the secretary remove the check-in of a child');
-select is(pg_temp.run_as('super_admin', $$delete from public.attendance_checkins where id = 'bb400000-0000-4000-8000-000000000003'$$), 1::bigint, 'should let the super admin remove the check-in of a child');
+select is(pg_temp.run_as('secretary', $$delete from public.attendance_checkins where id = 'bb400000-0000-4000-8000-000000000005'$$), 0::bigint, 'should not let the secretary remove the check-in of a minor outside the children''s ministry');
+select is(pg_temp.run_as('secretary', $$delete from public.attendance_checkins where id = 'bb400000-0000-4000-8000-000000000003'$$), 1::bigint, 'should let the secretary remove the check-in of a child of the children''s ministry');
+select is(pg_temp.run_as('super_admin', $$delete from public.attendance_checkins where id = 'bb400000-0000-4000-8000-000000000005'$$), 1::bigint, 'should let the super admin remove the check-in of a child');
 select is(pg_temp.run_as(label, $$delete from public.attendance_checkins$$), 0::bigint, format('should not let %s remove check-ins', label))
 from actors where label in ('pastor', 'head_children', 'treasurer', 'no_role', 'no_staff') order by label;
 select throws_ok(pg_temp.attempt('anon', $$delete from public.attendance_checkins$$), '42501', null, 'should deny anon removing check-ins');
@@ -462,8 +469,12 @@ select is(
 from actors where label = 'secretary';
 
 select throws_ok(
-  pg_temp.attempt('secretary', $$insert into public.program_participants (program_id, member_id) values ('bb100000-0000-4000-8000-000000000004', '60000000-0000-4000-8000-000000000005')$$),
-  '42501', null, 'should not let the secretary register a child');
+  pg_temp.attempt('secretary', $$insert into public.program_participants (program_id, member_id) values ('bb100000-0000-4000-8000-000000000004', '60000000-0000-4000-8000-000000000006')$$),
+  '42501', null, 'should not let the secretary register a minor outside the children''s ministry');
+
+select is(
+  pg_temp.run_as('secretary', $$insert into public.program_participants (program_id, member_id) values ('bb100000-0000-4000-8000-000000000004', '60000000-0000-4000-8000-000000000005')$$),
+  1::bigint, 'should let the secretary register a child of the children''s ministry');
 
 select throws_ok(
   pg_temp.attempt('secretary', $$insert into public.program_participants (program_id, member_id) values ('bb100000-0000-4000-8000-000000000004', gen_random_uuid())$$),

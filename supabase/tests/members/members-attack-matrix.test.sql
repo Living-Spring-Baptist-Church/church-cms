@@ -206,7 +206,7 @@ values
 
 select throws_ok(pg_temp.attempt(label, format('select private.%s', helper)), '42501', null, format('should refuse %s calling private.%s directly', label, helper))
 from actors
-cross join (values ('is_minor(current_date)'), ('can_view_minors()'), ('can_manage_members()'), ('heads_department_of_member(gen_random_uuid(), false)'), ('age_of_majority()')) as helpers (helper)
+cross join (values ('is_minor(current_date, false)'), ('can_view_minors()'), ('can_manage_members()'), ('heads_department_of_member(gen_random_uuid(), false)'), ('age_of_majority()')) as helpers (helper)
 where label in ('secretary', 'usher', 'anon')
 order by label, helper;
 
@@ -235,7 +235,7 @@ $$;
 
 select is(
   pg_temp.count_members_with_search_path('secretary', 'pg_temp, public'),
-  5::bigint,
+  7::bigint,
   'should show the secretary the same members whatever search_path they set'
 );
 
@@ -256,7 +256,7 @@ select is((select first_name from public.members where id = '60000000-0000-4000-
 
 -- Probing ids: the answer is the same for a hidden row and a row that does not exist
 
-select throws_ok(pg_temp.attempt('secretary', $$insert into public.visitor_followups (member_id) values ('60000000-0000-4000-8000-000000000005')$$), '42501', null, 'should refuse a follow-up for a minor the secretary cannot see');
+select throws_ok(pg_temp.attempt('secretary', $$insert into public.visitor_followups (member_id) values ('60000000-0000-4000-8000-000000000006')$$), '42501', null, 'should refuse a follow-up for a minor outside the children''s ministry that the secretary cannot see');
 select throws_ok(pg_temp.attempt('secretary', $$insert into public.visitor_followups (member_id) values (gen_random_uuid())$$), '42501', null, 'should refuse a follow-up for an id that does not exist with the same error');
 
 -- A name filtered out of member_names cannot leak through an error message (the view is a security barrier)
@@ -311,9 +311,9 @@ select is(
 );
 
 select is(
-  pg_temp.graphql_as('secretary', format('query { node(nodeId: "%s") { ... on Members { firstName } } }', pg_temp.node_id_of('MinorChildren'))) #> '{data,node}',
+  pg_temp.graphql_as('secretary', format('query { node(nodeId: "%s") { ... on Members { firstName } } }', pg_temp.node_id_of('MinorChoir'))) #> '{data,node}',
   'null'::jsonb,
-  'should return null when the secretary asks for a minor by node id'
+  'should return null when the secretary asks for a minor outside the children''s ministry by node id'
 );
 
 select is(
@@ -330,8 +330,8 @@ select is(
 
 select is(
   jsonb_array_length(pg_temp.graphql_as('secretary', $$query { householdsCollection(filter: { name: { eq: "Beta Household" } }) { edges { node { membersCollection { edges { node { id } } } } } } }$$) #> '{data,householdsCollection,edges,0,node,membersCollection,edges}'),
-  0,
-  'should show the secretary no members of a household that holds only minors'
+  1,
+  'should show the secretary only the child of the children''s ministry among the minors of a household'
 );
 
 select is(

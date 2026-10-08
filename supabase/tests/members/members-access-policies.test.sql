@@ -6,7 +6,7 @@
 
 begin;
 
-select plan(303);
+select plan(307);
 
 -- Fixture: start from an empty congregation and identity model so the demo seed cannot influence the results.
 set local session_replication_role = replica;
@@ -194,9 +194,9 @@ create temp table expected_members (label text primary key, seen text not null);
 insert into expected_members
 values
   ('super_admin', 'AdultArchived,AdultBoth,AdultChoir,AdultNone,AdultYouth,MinorArchived,MinorChildren,MinorChoir,UnknownDob'),
-  ('pastor', 'AdultBoth,AdultChoir,AdultNone,AdultYouth,MinorChildren,MinorChoir,UnknownDob'),
-  ('usher_and_pastor', 'AdultBoth,AdultChoir,AdultNone,AdultYouth,MinorChildren,MinorChoir,UnknownDob'),
-  ('secretary', 'AdultArchived,AdultBoth,AdultChoir,AdultNone,AdultYouth'),
+  ('pastor', 'AdultArchived,AdultBoth,AdultChoir,AdultNone,AdultYouth,MinorArchived,MinorChildren,MinorChoir,UnknownDob'),
+  ('usher_and_pastor', 'AdultArchived,AdultBoth,AdultChoir,AdultNone,AdultYouth,MinorArchived,MinorChildren,MinorChoir,UnknownDob'),
+  ('secretary', 'AdultArchived,AdultBoth,AdultChoir,AdultNone,AdultYouth,MinorArchived,MinorChildren'),
   ('head_choir', 'AdultBoth,AdultChoir'),
   ('head_youth', 'AdultBoth,AdultYouth'),
   ('head_children', 'MinorChildren'),
@@ -249,9 +249,11 @@ from (values
   ('head_choir_and_children', '60000000-0000-4000-8000-000000000006', 0),
   ('head_choir_and_children', '60000000-0000-4000-8000-000000000005', 1),
   ('usher', '60000000-0000-4000-8000-000000000001', 0),
-  ('secretary', '60000000-0000-4000-8000-000000000005', 0),
+  ('secretary', '60000000-0000-4000-8000-000000000005', 1),
+  ('secretary', '60000000-0000-4000-8000-000000000006', 0),
+  ('secretary', '60000000-0000-4000-8000-000000000007', 1),
   ('secretary', '60000000-0000-4000-8000-000000000008', 0),
-  ('pastor', '60000000-0000-4000-8000-000000000004', 0),
+  ('pastor', '60000000-0000-4000-8000-000000000004', 1),
   ('pastor', '60000000-0000-4000-8000-000000000005', 1)
 ) as probes (caller, member_id, expected);
 
@@ -329,8 +331,8 @@ select throws_ok(pg_temp.attempt('anon', $$update public.members set phone = '+2
 
 select is(
   pg_temp.run_as(label, $$update public.members set phone = '+233200000998' where first_name = 'MinorChildren'$$),
-  case when label = 'super_admin' then 1 else 0 end::bigint,
-  format('should let %s update a minor only if super admin', label)
+  case when label in ('super_admin', 'secretary', 'head_children', 'head_choir_and_children', 'usher_and_head_children') then 1 else 0 end::bigint,
+  format('should let %s update a child of the children''s ministry only if super admin, secretary or head of that ministry', label)
 ) from actors where label <> 'anon' order by label;
 
 select throws_ok(
@@ -389,7 +391,7 @@ select is(
 );
 
 select is(pg_temp.seen_as('head_choir', 'public.members', 'first_name'), 'AdultBoth', 'should hide an archived member from the department head');
-select is(pg_temp.seen_as('pastor', 'public.members', 'first_name') like '%AdultChoir%', false, 'should hide an archived member from the pastor');
+select is(pg_temp.seen_as('pastor', 'public.members', 'first_name') like '%AdultChoir%', true, 'should show an archived member to the pastor');
 select is(pg_temp.seen_as('secretary', 'public.members', 'first_name') like '%AdultChoir%', true, 'should keep an archived adult visible to the secretary');
 select is(pg_temp.seen_as('super_admin', 'public.members', 'first_name') like '%AdultChoir%', true, 'should keep an archived member visible to the super admin');
 
@@ -402,9 +404,21 @@ select is(
 select is(pg_temp.seen_as('head_choir', 'public.members', 'first_name'), 'AdultBoth,AdultChoir', 'should show a restored member to the department head again');
 
 select is(
-  pg_temp.run_as('secretary', $$update public.members set archived_at = now() where first_name = 'MinorChildren'$$),
+  pg_temp.run_as('secretary', $$update public.members set archived_at = now() where first_name = 'MinorChoir'$$),
   0::bigint,
-  'should not let the secretary archive a minor'
+  'should not let the secretary archive a minor outside the children''s ministry'
+);
+
+select is(
+  pg_temp.run_as('secretary', $$update public.members set archived_at = now() where first_name = 'MinorChildren'$$),
+  1::bigint,
+  'should let the secretary archive a child of the children''s ministry'
+);
+
+select is(
+  pg_temp.run_as('secretary', $$update public.members set archived_at = null where first_name = 'MinorChildren'$$),
+  1::bigint,
+  'should let the secretary restore a child of the children''s ministry'
 );
 
 select is(
@@ -414,7 +428,7 @@ select is(
 );
 
 select is(pg_temp.seen_as('head_children', 'public.members', 'first_name'), '', 'should hide an archived minor from the head of children''s ministry');
-select is(pg_temp.seen_as('pastor', 'public.members', 'first_name') like '%MinorChildren%', false, 'should hide an archived minor from the pastor');
+select is(pg_temp.seen_as('pastor', 'public.members', 'first_name') like '%MinorChildren%', true, 'should show an archived minor to the pastor');
 
 -- No DELETE or TRUNCATE for anyone, the super admin included
 
@@ -436,8 +450,7 @@ select throws_ok(
 
 select is(
   pg_temp.seen_as(label, 'public.households', 'name'),
-  case when label in ('super_admin', 'secretary') then 'Alpha Household,Beta Household,Gamma Household'
-       when label in ('pastor', 'usher_and_pastor') then 'Alpha Household,Beta Household'
+  case when label in ('super_admin', 'secretary', 'pastor', 'usher_and_pastor') then 'Alpha Household,Beta Household,Gamma Household'
        else '' end,
   format('should show %s only the households they may see', label)
 ) from actors where label <> 'anon' order by label;
@@ -466,7 +479,7 @@ select is(
   'should let the secretary archive a household'
 );
 
-select is(pg_temp.seen_as('pastor', 'public.households', 'name') like '%Beta Household%', false, 'should hide an archived household from the pastor');
+select is(pg_temp.seen_as('pastor', 'public.households', 'name') like '%Beta Household%', true, 'should keep an archived household visible to the pastor');
 select is(pg_temp.seen_as('secretary', 'public.households', 'name') like '%Beta Household%', true, 'should keep an archived household visible to the secretary');
 select throws_ok(pg_temp.attempt('super_admin', $$insert into public.households (name) values ('   ')$$), '23514', null, 'should reject a blank household name');
 select throws_ok(pg_temp.attempt('anon', $$insert into public.households (name) values ('Anon')$$), '42501', null, 'should deny anon creating a household');

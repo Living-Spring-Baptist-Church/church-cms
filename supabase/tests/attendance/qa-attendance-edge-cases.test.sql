@@ -5,7 +5,7 @@
 
 begin;
 
-select plan(67);
+select plan(68);
 
 create function pg_temp.probe(p_sub uuid, p_role text, p_stmt text)
 returns text
@@ -236,7 +236,10 @@ select is(pg_temp.probe('10000000-0000-4000-8000-000000000005', 'authenticated',
 select is((select count(*) from audit.log where id > (select id from audit_mark)), 0::bigint, 'should leave no audit rows when a write is rejected');
 select is((select men from public.attendance_counts where service_id = 'b1000000-0000-4000-8000-000000000004'), 11, 'should keep the earlier count when a later one is rejected');
 
--- age boundary between check-in and read: a child checked in by the super admin turns 18
+-- age boundary between check-in and read: a child checked in by the super admin turns 18. The seeded child is taken out
+-- of the children's ministry first, because the secretary reads the children of that ministry.
+
+delete from public.member_departments where member_id = '40000000-0000-4000-8000-000000000003';
 
 insert into public.attendance_checkins (service_id, member_id, checked_in_by)
 values ('b1000000-0000-4000-8000-000000000005', '40000000-0000-4000-8000-000000000003', '10000000-0000-4000-8000-000000000001');
@@ -265,6 +268,12 @@ select is(
 select is(
   pg_temp.probe('10000000-0000-4000-8000-000000000004', 'authenticated', $$insert into public.program_participants (program_id, member_id) values ('b2000000-0000-4000-8000-000000000001', '40000000-0000-4000-8000-000000000003')$$),
   '42501 ', 'should answer with a plain denial and not a duplicate key error when a secretary registers an already registered minor');
+
+insert into public.member_departments (member_id, department_id)
+select '40000000-0000-4000-8000-000000000003', id from public.departments where is_childrens_ministry limit 1;
+
+select is(pg_temp.visible('10000000-0000-4000-8000-000000000004', $$select 1 from public.attendance_checkins where member_id = '40000000-0000-4000-8000-000000000003'$$), 1::bigint,
+  'should show the check-in of a child of the children''s ministry to the secretary');
 
 select * from finish();
 

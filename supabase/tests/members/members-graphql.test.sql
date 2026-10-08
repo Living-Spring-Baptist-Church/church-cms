@@ -237,7 +237,7 @@ $$;
 -- name would make one relationship silently resolve to the wrong table)
 
 select is(pg_temp.type_fields('Members'),
-  '["archivedAt", "attendanceCheckinsCollection", "consentRecordedAt", "createdAt", "dateOfBirth", "email", "firstName", "firstVisitOn", "gender", "household", "householdId", "id", "joinedOn", "lastName", "maritalStatus", "memberDepartmentsCollection", "nodeId", "phone", "programParticipantsCollection", "smsOptOut", "staffCollection", "status", "updatedAt", "visitorFollowupsCollection"]'::jsonb,
+  '["adultConfirmed", "archivedAt", "attendanceCheckinsCollection", "consentRecordedAt", "createdAt", "dateOfBirth", "email", "firstName", "firstVisitOn", "gender", "household", "householdId", "id", "joinedOn", "lastName", "maritalStatus", "memberDepartmentsCollection", "nodeId", "phone", "programParticipantsCollection", "smsOptOut", "staffCollection", "status", "updatedAt", "visitorFollowupsCollection"]'::jsonb,
   'should list exactly these fields on Members');
 select is(pg_temp.type_fields('Households'),
   '["address", "archivedAt", "createdAt", "id", "membersCollection", "name", "nodeId", "updatedAt"]'::jsonb,
@@ -387,15 +387,15 @@ select is(
 );
 
 select is(
-  pg_temp.graphql_as('secretary', $$mutation { updateMembersCollection(set: { phone: "+233200000557" }, filter: { firstName: { eq: "MinorChildren" } }) { affectedCount } }$$) #>> '{data,updateMembersCollection,affectedCount}',
+  pg_temp.graphql_as('secretary', $$mutation { updateMembersCollection(set: { phone: "+233200000557" }, filter: { firstName: { eq: "MinorChoir" } }) { affectedCount } }$$) #>> '{data,updateMembersCollection,affectedCount}',
   '0',
-  'should update nothing when the secretary tries to change a minor'
+  'should update nothing when the secretary tries to change a minor outside the children''s ministry'
 );
 
 select is(
   jsonb_array_length(pg_temp.graphql_as('secretary', $$query { membersCollection(filter: { firstName: { in: ["MinorChildren", "MinorChoir", "AdultNone"] } }) { edges { node { id } } } }$$) #> '{data,membersCollection,edges}'),
-  1,
-  'should show the secretary only the adult through membersCollection'
+  2,
+  'should show the secretary the adult and the child of the children''s ministry, never the other minor, through membersCollection'
 );
 
 select isnt(pg_temp.graphql_as('secretary', $$mutation { deleteFromMembersCollection(filter: { firstName: { eq: "AdultNone" } }) { affectedCount } }$$) -> 'errors', null, 'should offer no deleteFromMembersCollection mutation');

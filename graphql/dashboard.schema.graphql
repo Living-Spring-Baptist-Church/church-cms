@@ -823,7 +823,7 @@ input MemberDepartmentsOrderBy {
 }
 
 """
-Names and status of active members for ushers and the treasurer. Returns nothing to any other role. Minors are listed only to roles that may see every minor, and people with no date of birth are treated as minors.
+Names and status of active members for ushers and the treasurer. Returns nothing to any other role. Minors are listed only to roles that may see every minor, and people with no date of birth are treated as minors unless an office user confirmed they are adults.
 """
 type MemberNames implements Node {
   """Globally Unique Record Identifier"""
@@ -910,6 +910,7 @@ type Members implements Node {
   createdAt: Datetime!
   updatedAt: Datetime!
   archivedAt: Datetime
+  adultConfirmed: Boolean!
   household: Households
   programParticipantsCollection(
     """Query the first `n` records in the collection"""
@@ -1061,6 +1062,7 @@ input MembersFilter {
   createdAt: DatetimeFilter
   updatedAt: DatetimeFilter
   archivedAt: DatetimeFilter
+  adultConfirmed: BooleanFilter
   nodeId: IDFilter
 
   """
@@ -1091,6 +1093,7 @@ input MembersInsertInput {
   joinedOn: Date
   smsOptOut: Boolean
   consentRecordedAt: Datetime
+  adultConfirmed: Boolean
 }
 
 type MembersInsertResponse {
@@ -1119,6 +1122,7 @@ input MembersOrderBy {
   createdAt: OrderByDirection
   updatedAt: OrderByDirection
   archivedAt: OrderByDirection
+  adultConfirmed: OrderByDirection
 }
 
 input MembersUpdateInput {
@@ -1136,6 +1140,7 @@ input MembersUpdateInput {
   smsOptOut: Boolean
   consentRecordedAt: Datetime
   archivedAt: Datetime
+  adultConfirmed: Boolean
 }
 
 type MembersUpdateResponse {
@@ -1238,6 +1243,7 @@ type Mutation {
   publishContent(pId: UUID!): ContentItems
   publishSermon(pId: UUID!): Sermons
   recordAttendanceCounts(pServiceId: UUID!, pMen: Int!, pWomen: Int!, pChildren: Int!, pVisitors: Int!): AttendanceCounts
+  registerChild(pFirstName: String!, pLastName: String!, pDepartmentId: UUID!, pDateOfBirth: Date, pHouseholdId: UUID, pGender: String): Members
   returnContentToDraft(pId: UUID!): ContentItems
   returnSermonToDraft(pId: UUID!): Sermons
   revokeRole(pStaffId: UUID!, pRole: String!, pDepartmentId: UUID): StaffRoles

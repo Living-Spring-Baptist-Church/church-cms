@@ -4,7 +4,7 @@
 
 begin;
 
-select plan(149);
+select plan(151);
 
 -- Fixture: start from an empty congregation and identity model so the demo seed cannot influence the results.
 set local session_replication_role = replica;
@@ -178,12 +178,12 @@ values
   ('60000000-0000-4000-8000-000000000009', '40000000-0000-4000-8000-000000000001'),
   ('60000000-0000-4000-8000-000000000009', '40000000-0000-4000-8000-000000000002');
 
--- Follow-ups, keyed by notes: on an adult visitor, on a minor, on an archived adult.
+-- Follow-ups, keyed by notes: on an adult visitor, on a minor outside the children's ministry, on an archived adult.
 insert into public.visitor_followups (id, member_id, assigned_to, status, notes)
 select ids.id, ids.member_id, (select staff_id from actors where label = 'secretary'), 'pending', ids.notes
 from (values
   ('70000000-0000-4000-8000-000000000001'::uuid, '60000000-0000-4000-8000-000000000003'::uuid, 'FollowAdult'),
-  ('70000000-0000-4000-8000-000000000002'::uuid, '60000000-0000-4000-8000-000000000005'::uuid, 'FollowMinor'),
+  ('70000000-0000-4000-8000-000000000002'::uuid, '60000000-0000-4000-8000-000000000006'::uuid, 'FollowMinor'),
   ('70000000-0000-4000-8000-000000000003'::uuid, '60000000-0000-4000-8000-000000000004'::uuid, 'FollowArchived')
 ) as ids (id, member_id, notes);
 
@@ -192,9 +192,9 @@ create temp table expected_members (label text primary key, seen text not null);
 insert into expected_members
 values
   ('super_admin', 'AdultArchived,AdultBoth,AdultChoir,AdultNone,AdultYouth,MinorArchived,MinorChildren,MinorChoir,UnknownDob'),
-  ('pastor', 'AdultBoth,AdultChoir,AdultNone,AdultYouth,MinorChildren,MinorChoir,UnknownDob'),
-  ('usher_and_pastor', 'AdultBoth,AdultChoir,AdultNone,AdultYouth,MinorChildren,MinorChoir,UnknownDob'),
-  ('secretary', 'AdultArchived,AdultBoth,AdultChoir,AdultNone,AdultYouth'),
+  ('pastor', 'AdultArchived,AdultBoth,AdultChoir,AdultNone,AdultYouth,MinorArchived,MinorChildren,MinorChoir,UnknownDob'),
+  ('usher_and_pastor', 'AdultArchived,AdultBoth,AdultChoir,AdultNone,AdultYouth,MinorArchived,MinorChildren,MinorChoir,UnknownDob'),
+  ('secretary', 'AdultArchived,AdultBoth,AdultChoir,AdultNone,AdultYouth,MinorArchived,MinorChildren'),
   ('head_choir', 'AdultBoth,AdultChoir'),
   ('head_youth', 'AdultBoth,AdultYouth'),
   ('head_children', 'MinorChildren'),
@@ -207,7 +207,7 @@ values
 create temp table expected_links (label text primary key, row_count bigint not null);
 insert into expected_links
 values
-  ('super_admin', 9), ('pastor', 7), ('usher_and_pastor', 7), ('secretary', 5),
+  ('super_admin', 9), ('pastor', 9), ('usher_and_pastor', 9), ('secretary', 7),
   ('head_choir', 2), ('head_youth', 2), ('head_children', 1), ('usher_and_head_children', 1),
   ('head_choir_and_children', 3);
 
@@ -226,9 +226,15 @@ select is(
 );
 
 select is(
-  pg_temp.run_as('secretary', $$select * from public.member_departments where member_id = '60000000-0000-4000-8000-000000000005'$$),
+  pg_temp.run_as('secretary', $$select * from public.member_departments where member_id = '60000000-0000-4000-8000-000000000006'$$),
   0::bigint,
-  'should not show the secretary the department of a minor'
+  'should not show the secretary the department of a minor outside the children''s ministry'
+);
+
+select is(
+  pg_temp.run_as('secretary', $$select * from public.member_departments where member_id = '60000000-0000-4000-8000-000000000005'$$),
+  1::bigint,
+  'should show the secretary the department link of a child in the children''s ministry'
 );
 
 -- inserts
@@ -285,7 +291,7 @@ select throws_ok(
 
 select is(pg_temp.run_as('super_admin', $$delete from public.member_departments where member_id = '60000000-0000-4000-8000-000000000002'$$), 1::bigint, 'should let the super admin remove a department link');
 select is(pg_temp.run_as('secretary', $$delete from public.member_departments where member_id = '60000000-0000-4000-8000-000000000009' and department_id = '40000000-0000-4000-8000-000000000002'$$), 1::bigint, 'should let the secretary remove a department link of an adult');
-select is(pg_temp.run_as('secretary', $$delete from public.member_departments where member_id = '60000000-0000-4000-8000-000000000005'$$), 0::bigint, 'should not let the secretary remove the department link of a minor');
+select is(pg_temp.run_as('secretary', $$delete from public.member_departments where member_id = '60000000-0000-4000-8000-000000000005'$$), 0::bigint, 'should not let the secretary remove the children''s ministry link of a child, which would leave the child unreadable');
 
 select is(
   pg_temp.run_as(label, $$delete from public.member_departments where member_id = '60000000-0000-4000-8000-000000000001'$$),
@@ -300,7 +306,7 @@ select throws_ok(pg_temp.attempt('anon', 'delete from public.member_departments'
 select is(
   pg_temp.seen_as(label, 'public.visitor_followups', 'notes'),
   case when label = 'super_admin' then 'FollowAdult,FollowArchived,FollowMinor'
-       when label in ('pastor', 'usher_and_pastor') then 'FollowAdult,FollowMinor'
+       when label in ('pastor', 'usher_and_pastor') then 'FollowAdult,FollowArchived,FollowMinor'
        when label = 'secretary' then 'FollowAdult,FollowArchived'
        else '' end,
   format('should show %s only the follow-ups they may see', label)
@@ -321,9 +327,15 @@ select throws_ok(
 ) from actors where label not in ('super_admin', 'secretary') order by label;
 
 select throws_ok(
-  pg_temp.attempt('secretary', $$insert into public.visitor_followups (member_id, notes) values ('60000000-0000-4000-8000-000000000005', 'MinorFollow')$$),
+  pg_temp.attempt('secretary', $$insert into public.visitor_followups (member_id, notes) values ('60000000-0000-4000-8000-000000000006', 'MinorFollow')$$),
   '42501', null,
-  'should reject the secretary creating a follow-up for a minor'
+  'should reject the secretary creating a follow-up for a minor outside the children''s ministry'
+);
+
+select is(
+  pg_temp.run_as('secretary', $$insert into public.visitor_followups (member_id, notes) values ('60000000-0000-4000-8000-000000000005', 'ChildFollow')$$),
+  1::bigint,
+  'should let the secretary create a follow-up for a child in the children''s ministry'
 );
 
 select is(
@@ -352,7 +364,7 @@ select is(
 
 select throws_ok(pg_temp.attempt('anon', $$update public.visitor_followups set status = 'done'$$), '42501', null, 'should deny anon updating follow-ups');
 
-select is(pg_temp.run_as('secretary', $$update public.visitor_followups set status = 'done' where notes = 'FollowMinor'$$), 0::bigint, 'should not let the secretary update the follow-up of a minor');
+select is(pg_temp.run_as('secretary', $$update public.visitor_followups set status = 'done' where notes = 'FollowMinor'$$), 0::bigint, 'should not let the secretary update the follow-up of a minor outside the children''s ministry');
 select is(pg_temp.run_as('super_admin', $$update public.visitor_followups set status = 'done' where notes = 'FollowMinor'$$), 1::bigint, 'should let the super admin update the follow-up of a minor');
 select is(pg_temp.run_as('secretary', $$update public.visitor_followups set status = 'done' where notes = 'FollowArchived'$$), 1::bigint, 'should let the secretary update the follow-up of an archived adult');
 select throws_ok(pg_temp.attempt('super_admin', $$update public.visitor_followups set status = 'wizard' where notes = 'FollowAdult'$$), '23514', null, 'should reject moving a follow-up to an unknown status');

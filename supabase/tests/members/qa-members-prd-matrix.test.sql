@@ -228,15 +228,15 @@ create temp table expected_reads (label text primary key, members text not null,
 insert into expected_reads
 values
   ('super_admin', 'AdultArchived,AdultChoir,AdultNoDept,ChildKids,NoDob,TeenChoir', 2, 3, 2, ''),
-  ('pastor', 'AdultChoir,AdultNoDept,ChildKids,NoDob,TeenChoir', 1, 3, 2, ''),
+  ('pastor', 'AdultArchived,AdultChoir,AdultNoDept,ChildKids,NoDob,TeenChoir', 2, 3, 2, ''),
   ('treasurer', '', 0, 0, 0, 'AdultChoir,AdultNoDept'),
-  ('secretary', 'AdultArchived,AdultChoir,AdultNoDept', 2, 1, 1, ''),
+  ('secretary', 'AdultArchived,AdultChoir,AdultNoDept,ChildKids', 2, 2, 2, ''),
   ('usher', '', 0, 0, 0, 'AdultChoir,AdultNoDept'),
   ('content_editor', '', 0, 0, 0, ''),
   ('head_choir', 'AdultChoir', 0, 1, 0, ''),
   ('head_children', 'ChildKids', 0, 1, 0, ''),
   ('secretary_and_head_children', 'AdultArchived,AdultChoir,AdultNoDept,ChildKids', 2, 2, 2, ''),
-  ('treasurer_and_pastor', 'AdultChoir,AdultNoDept,ChildKids,NoDob,TeenChoir', 1, 3, 2, 'AdultChoir,AdultNoDept,ChildKids,NoDob,TeenChoir');
+  ('treasurer_and_pastor', 'AdultArchived,AdultChoir,AdultNoDept,ChildKids,NoDob,TeenChoir', 2, 3, 2, 'AdultChoir,AdultNoDept,ChildKids,NoDob,TeenChoir');
 
 select is(pg_temp.seen_as(label, 'public.members', 'first_name'), members, 'should show ' || label || ' exactly the members the PRD allows')
 from expected_reads order by label;
@@ -259,21 +259,21 @@ select is(
   pg_temp.seen_as('secretary', 'public.households', 'name') || '|' ||
   pg_temp.seen_as('usher', 'public.households', 'name') || '|' ||
   pg_temp.seen_as('head_choir', 'public.households', 'name'),
-  'Alpha Household,Archived Household|Alpha Household|Alpha Household,Archived Household||',
-  'should show households (addresses) to super admin, pastor (active) and secretary only');
+  'Alpha Household,Archived Household|Alpha Household,Archived Household|Alpha Household,Archived Household||',
+  'should show households (addresses) to super admin, pastor and secretary only');
 
 select is(
   pg_temp.seen_as('super_admin', 'public.visitor_followups', 'notes') || '|' ||
   pg_temp.seen_as('secretary', 'public.visitor_followups', 'notes') || '|' ||
   pg_temp.seen_as('head_children', 'public.visitor_followups', 'notes') || '|' ||
   pg_temp.seen_as('usher', 'public.visitor_followups', 'notes'),
-  'FollowAdult,FollowChild|FollowAdult||',
-  'should hide the follow-up of a minor from the secretary and every follow-up from heads and ushers');
+  'FollowAdult,FollowChild|FollowAdult,FollowChild||',
+  'should show the follow-up of a child of the children''s ministry to the secretary and hide every follow-up from heads and ushers');
 
 select is(
   pg_temp.seen_as('secretary', 'public.member_departments', 'department_id') || '|' || pg_temp.seen_as('head_choir', 'public.member_departments', 'department_id'),
-  'c0000000-0000-4000-8000-000000000001|c0000000-0000-4000-8000-000000000001',
-  'should show a choir head and the secretary only the choir link of the adult, never the minors links');
+  'c0000000-0000-4000-8000-000000000001,c0000000-0000-4000-8000-000000000003|c0000000-0000-4000-8000-000000000001',
+  'should show a choir head only the choir link of the adult and the secretary also the children''s ministry link of the child, never the youth minor''s link');
 
 select is(pg_temp.seen_as('anon', 'public.members', 'first_name'), 'denied', 'should deny anon on members');
 select is(pg_temp.seen_as('anon', 'public.member_names', 'first_name'), 'denied', 'should deny anon on member_names');
@@ -294,7 +294,7 @@ cross join (values
   ('edit adult', $$update public.members set last_name = 'Edited' where first_name = 'AdultChoir'$$,
     '{"super_admin": "1", "secretary": "1"}'::jsonb, '0'),
   ('edit child', $$update public.members set last_name = 'Edited' where first_name = 'ChildKids'$$,
-    '{"super_admin": "1"}'::jsonb, '0'),
+    '{"super_admin": "1", "secretary": "1", "head_children": "1"}'::jsonb, '0'),
   ('archive adult', $$update public.members set archived_at = now() where first_name = 'AdultNoDept'$$,
     '{"super_admin": "1", "secretary": "1"}'::jsonb, '0')
 ) as actions (action, statement, allowed, otherwise);
@@ -321,22 +321,22 @@ select is(pg_temp.trial('secretary', $$update public.members set created_at = no
 select is(pg_temp.trial('secretary', $$update public.members set household_id = 'e0000000-0000-4000-8000-000000000001' where first_name = 'AdultNoDept'$$), '1', 'should let the secretary move an adult into a household');
 
 select is(
-  pg_temp.trial('secretary', $$insert into public.member_departments (member_id, department_id) values ('f0000000-0000-4000-8000-000000000004', 'c0000000-0000-4000-8000-000000000001')$$),
-  pg_temp.trial('secretary', $$insert into public.member_departments (member_id, department_id) values ('99999999-0000-4000-8000-000000000004', 'c0000000-0000-4000-8000-000000000001')$$),
+  pg_temp.trial('secretary', $$insert into public.member_departments (member_id, department_id) values ('f0000000-0000-4000-8000-000000000005', 'c0000000-0000-4000-8000-000000000002')$$),
+  pg_temp.trial('secretary', $$insert into public.member_departments (member_id, department_id) values ('99999999-0000-4000-8000-000000000004', 'c0000000-0000-4000-8000-000000000002')$$),
   'should answer a link to a hidden minor exactly like a link to a missing member');
 select is(
-  pg_temp.trial('secretary', $$insert into public.visitor_followups (member_id) values ('f0000000-0000-4000-8000-000000000004')$$),
+  pg_temp.trial('secretary', $$insert into public.visitor_followups (member_id) values ('f0000000-0000-4000-8000-000000000005')$$),
   pg_temp.trial('secretary', $$insert into public.visitor_followups (member_id) values ('99999999-0000-4000-8000-000000000004')$$),
   'should answer a follow-up for a hidden minor exactly like one for a missing member');
 
 -- Error and filter side channels: policy conditions run before the caller's own conditions.
-select is(pg_temp.trial('secretary', $$select 1 / (case when first_name = 'ChildKids' then 0 else 1 end) from public.members$$), '3', 'should not let the secretary trigger an error on a hidden minor row');
+select is(pg_temp.trial('secretary', $$select 1 / (case when first_name = 'TeenChoir' then 0 else 1 end) from public.members$$), '4', 'should not let the secretary trigger an error on a hidden minor row');
 select is(pg_temp.trial('head_choir', $$select 1 / (case when first_name in ('ChildKids', 'TeenChoir', 'AdultNoDept') then 0 else 1 end) from public.members$$), '1', 'should not let a head trigger an error on rows outside their department');
 select is(pg_temp.trial('usher', $$select 1 / (case when first_name in ('ChildKids', 'TeenChoir', 'NoDob', 'AdultArchived') then 0 else 1 end) from public.member_names$$), '2', 'should not let an usher trigger an error on rows the view filters out');
 select is(pg_temp.trial('secretary', $$select first_name::int from public.members where first_name = 'TeenChoir'$$), '0', 'should not let a cast error reveal a hidden minor to the secretary');
 select is(pg_temp.scalar_as('secretary', $$select count(*) from public.members where phone like '+233%'$$), '3', 'should count only visible rows when the secretary filters by phone');
-select is(pg_temp.trial('secretary', $$select * from public.members where first_name = 'ChildKids' or true$$), '3', 'should keep hidden rows out when the filter has an or true');
-select is(pg_temp.trial('secretary', $$select m.* from public.households h join public.members m on m.household_id = h.id$$), '1', 'should keep the minor out of a household join for the secretary');
+select is(pg_temp.trial('secretary', $$select * from public.members where first_name = 'TeenChoir' or true$$), '4', 'should keep hidden rows out when the filter has an or true');
+select is(pg_temp.trial('secretary', $$select m.* from public.households h join public.members m on m.household_id = h.id$$), '2', 'should keep the youth minor out of a household join for the secretary');
 
 -- member_names: shape, filter, order, limit.
 select is((select count(*)::int from information_schema.columns where table_schema = 'public' and table_name = 'member_names'), 4, 'should expose exactly four columns in member_names');
@@ -405,7 +405,7 @@ select is(
   0, 'should hide an archived member from the usher view');
 select is(
   jsonb_array_length(pg_temp.graphql_as('pastor', $$query { membersCollection(filter: { firstName: { eq: "Nana Adwoa" } }) { edges { node { id } } } }$$) #> '{data,membersCollection,edges}'),
-  0, 'should hide an archived member from the pastor');
+  1, 'should show an archived member to the pastor');
 select is(
   pg_temp.graphql_as('secretary', $$mutation { updateMembersCollection(set: { archivedAt: null }, filter: { firstName: { eq: "Nana Adwoa" } }) { affectedCount } }$$) #>> '{data,updateMembersCollection,affectedCount}',
   '1', 'should let the secretary restore an archived member');
@@ -436,20 +436,20 @@ select is(
   '["AdultChoir", "AdultNoDept"]'::jsonb, 'should show the choir head only the adults linked to the choir through GraphQL');
 
 select is(
-  pg_temp.graphql_as('secretary', $$query { householdsCollection(filter: { name: { eq: "Alpha Household" } }) { edges { node { membersCollection { edges { node { firstName } } } } } } }$$) #>> '{data,householdsCollection,edges,0,node,membersCollection,edges}',
-  '[{"node": {"firstName": "AdultChoir"}}]', 'should leave the minor out of a nested household to members query for the secretary');
+  pg_temp.sorted_values(pg_temp.graphql_as('secretary', $$query { householdsCollection(filter: { name: { eq: "Alpha Household" } }) { edges { node { membersCollection { edges { node { firstName } } } } } } }$$) #> '{data,householdsCollection,edges,0,node,membersCollection,edges}', '{node,firstName}'),
+  '["AdultChoir", "ChildKids"]'::jsonb, 'should show the secretary the adult and the child of the children ministry in a nested household query');
 select is(
   pg_temp.sorted_values(pg_temp.graphql_as('secretary', $$query { memberDepartmentsCollection { edges { node { member { firstName } } } } }$$) #> '{data,memberDepartmentsCollection,edges}', '{node,member,firstName}'),
-  '["AdultChoir", "AdultNoDept"]'::jsonb,
-  'should leave minors out of memberDepartmentsCollection for the secretary');
+  '["AdultChoir", "AdultNoDept", "ChildKids"]'::jsonb,
+  'should leave the youth minor out of memberDepartmentsCollection for the secretary');
 select is(
   pg_temp.sorted_values(pg_temp.graphql_as('secretary', $$query { visitorFollowupsCollection { edges { node { notes member { firstName } } } } }$$) #> '{data,visitorFollowupsCollection,edges}', '{node,notes}'),
-  '["Call back", "FollowAdult"]'::jsonb,
-  'should leave the follow-up of a minor out of visitorFollowupsCollection for the secretary');
+  '["Call back", "FollowAdult", "FollowChild"]'::jsonb,
+  'should show the secretary the follow-up of a child of the children ministry in visitorFollowupsCollection');
 
 select is(
-  pg_temp.graphql_as('secretary', format($$query { node(nodeId: "%s") { __typename } }$$, replace(encode(convert_to('["public","members","f0000000-0000-4000-8000-000000000004"]', 'utf8'), 'base64'), E'\n', ''))) #>> '{data,node}',
-  null, 'should return nothing when the secretary asks for a minor by node id');
+  pg_temp.graphql_as('secretary', format($$query { node(nodeId: "%s") { __typename } }$$, replace(encode(convert_to('["public","members","f0000000-0000-4000-8000-000000000005"]', 'utf8'), 'base64'), E'\n', ''))) #>> '{data,node}',
+  null, 'should return nothing when the secretary asks for a youth minor by node id');
 select is(
   pg_temp.graphql_as('pastor', format($$query { node(nodeId: "%s") { __typename } }$$, replace(encode(convert_to('["public","members","f0000000-0000-4000-8000-000000000004"]', 'utf8'), 'base64'), E'\n', ''))) #>> '{data,node,__typename}',
   'Members', 'should return the minor by node id to the pastor');
