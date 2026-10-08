@@ -199,14 +199,16 @@ from (values
 ) as ids (id, service_id);
 
 -- Check-ins: c1 usher checked in AdultChoir, c2 secretary checked in AdultNone, c3 super admin checked in
--- MinorChildren at SundayPast, c4 super admin checked in MinorChildren at the children's event.
+-- MinorChildren at SundayPast, c4 super admin checked in MinorChildren at the children's event, c5 super admin
+-- checked in MinorChoir (a minor outside the children's ministry) at SundayPast.
 insert into public.attendance_checkins (id, service_id, member_id, checked_in_by)
 select ids.id, ids.service_id, ids.member_id, (select staff_id from actors where label = ids.actor)
 from (values
   ('bb400000-0000-4000-8000-000000000001'::uuid, 'bb200000-0000-4000-8000-000000000001'::uuid, '60000000-0000-4000-8000-000000000001'::uuid, 'usher'),
   ('bb400000-0000-4000-8000-000000000002'::uuid, 'bb200000-0000-4000-8000-000000000001'::uuid, '60000000-0000-4000-8000-000000000003'::uuid, 'secretary'),
   ('bb400000-0000-4000-8000-000000000003'::uuid, 'bb200000-0000-4000-8000-000000000001'::uuid, '60000000-0000-4000-8000-000000000005'::uuid, 'super_admin'),
-  ('bb400000-0000-4000-8000-000000000004'::uuid, 'bb200000-0000-4000-8000-000000000005'::uuid, '60000000-0000-4000-8000-000000000005'::uuid, 'super_admin')
+  ('bb400000-0000-4000-8000-000000000004'::uuid, 'bb200000-0000-4000-8000-000000000005'::uuid, '60000000-0000-4000-8000-000000000005'::uuid, 'super_admin'),
+  ('bb400000-0000-4000-8000-000000000005'::uuid, 'bb200000-0000-4000-8000-000000000001'::uuid, '60000000-0000-4000-8000-000000000006'::uuid, 'super_admin')
 ) as ids (id, service_id, member_id, actor);
 
 -- Participants: ChoirProgram has AdultChoir and MinorChoir, ChildrenProgram has MinorChildren and AdultChoir,
@@ -317,7 +319,7 @@ select is(
   1, 'should list on Programs.servicesCollection the services of the program');
 select is(
   jsonb_array_length(pg_temp.graphql_as('super_admin', $$query { servicesCollection(filter: { name: { eq: "SundayPast" } }) { edges { node { attendanceCheckinsCollection { edges { node { member { firstName } checkedInByStaff { fullName } } } } } } } }$$) #> '{data,servicesCollection,edges,0,node,attendanceCheckinsCollection,edges}'),
-  3, 'should list on Services.attendanceCheckinsCollection the check-ins of the service');
+  4, 'should list on Services.attendanceCheckinsCollection the check-ins of the service');
 select is(
   pg_temp.graphql_as('super_admin', $$query { attendanceCheckinsCollection(filter: { id: { eq: "bb400000-0000-4000-8000-000000000001" } }) { edges { node { member { firstName } checkedInByStaff { fullName } service { name } } } } }$$) #>> '{data,attendanceCheckinsCollection,edges,0,node}',
   '{"member": {"firstName": "AdultChoir"}, "service": {"name": "SundayPast"}, "checkedInByStaff": {"fullName": "usher"}}',
@@ -392,14 +394,15 @@ select isnt(pg_temp.graphql_as('anon', $$query { programParticipantsCollection {
 
 select is(
   jsonb_array_length(pg_temp.graphql_as('secretary', $$query { attendanceCheckinsCollection { edges { node { member { firstName } } } } }$$) #> '{data,attendanceCheckinsCollection,edges}'),
-  3, 'should show the secretary only the check-ins of adults');
+  5, 'should show the secretary the check-ins of adults and of the children''s ministry, not of other minors');
 select is(
-  pg_temp.graphql_as('secretary', $$query { attendanceCheckinsCollection { edges { node { member { firstName } } } } }$$)::text ~ 'Minor',
-  false, 'should never name a child in the secretary''s check-in list');
+  pg_temp.graphql_as('secretary', $$query { attendanceCheckinsCollection { edges { node { member { firstName } } } } }$$)::text ~ 'MinorChoir',
+  false, 'should never name a minor outside the children''s ministry in the secretary''s check-in list');
 select is(
-  pg_temp.graphql_as('secretary', $$query { programsCollection(filter: { name: { eq: "ChildrenProgram" } }) { edges { node { programParticipantsCollection { edges { node { member { firstName } } } } } } } }$$) #>> '{data,programsCollection,edges,0,node,programParticipantsCollection,edges}',
-  '[{"node": {"member": {"firstName": "AdultChoir"}}}]',
-  'should show the secretary only the adult participant of the children''s program');
+  (select jsonb_agg(participant #>> '{node,member,firstName}' order by participant #>> '{node,member,firstName}')
+   from jsonb_array_elements(pg_temp.graphql_as('secretary', $$query { programsCollection(filter: { name: { eq: "ChildrenProgram" } }) { edges { node { programParticipantsCollection { edges { node { member { firstName } } } } } } } }$$) #> '{data,programsCollection,edges,0,node,programParticipantsCollection,edges}') as participant),
+  '["AdultChoir", "MinorChildren"]'::jsonb,
+  'should show the secretary the adult and the child of the children''s ministry in the children''s program');
 select is(
   pg_temp.graphql_as('usher', $$query { servicesCollection(filter: { name: { eq: "SundayPast" } }) { edges { node { attendanceCheckinsCollection { edges { node { member { firstName } } } } } } } }$$) #>> '{data,servicesCollection,edges,0,node,attendanceCheckinsCollection,edges}',
   '[{"node": {"member": null}}]',
@@ -421,8 +424,8 @@ as $$
 $$;
 
 select is(
-  pg_temp.graphql_as('secretary', format('{ node(nodeId: "%s") { __typename } }', pg_temp.node_id_of('programParticipantsCollection', 'bb500000-0000-4000-8000-000000000003'))) #>> '{data,node}',
-  null, 'should not resolve the node id of a child''s registration for the secretary');
+  pg_temp.graphql_as('secretary', format('{ node(nodeId: "%s") { __typename } }', pg_temp.node_id_of('programParticipantsCollection', 'bb500000-0000-4000-8000-000000000002'))) #>> '{data,node}',
+  null, 'should not resolve the node id of the registration of a minor outside the children''s ministry for the secretary');
 select is(
   pg_temp.graphql_as('super_admin', format('{ node(nodeId: "%s") { __typename } }', pg_temp.node_id_of('programParticipantsCollection', 'bb500000-0000-4000-8000-000000000003'))) #>> '{data,node,__typename}',
   'ProgramParticipants', 'should resolve the same node id for the super admin');

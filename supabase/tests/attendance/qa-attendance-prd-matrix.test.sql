@@ -2,7 +2,8 @@
 -- walked cell by cell for every role, inactive staff, a signed-in user with no staff row and anon. Each cell is one
 -- statement run as a real database role, undone afterwards, compared with the outcome the PRD requires:
 --   a number = rows returned or affected, 42501 = denied by grants or RLS, AUTH = AUTH_FORBIDDEN, VALID = VALIDATION_FAILED.
--- Fixture: the demo seed plus a few extra rows added below, all rolled back.
+-- Fixture: the demo seed plus a few extra rows added below, all rolled back. The seeded child Kofi belongs to the
+-- children's ministry, so the secretary (treated like its head, LBC-42) reads and writes his check-ins and registrations.
 
 begin;
 
@@ -112,11 +113,11 @@ insert into expected values
 ('R services', array['7','7','0','7','6','1','0','0','0','1','0','42501']),
 ('R services archived', array['1','1','0','1','0','0','0','0','0','0','0','42501']),
 ('R counts', array['2','2','0','2','2','1','0','0','0','0','0','42501']),
-('R checkins', array['4','4','0','3','2','1','0','0','0','1','0','42501']),
-('R checkins of Kofi(minor)', array['1','1','0','0','0','0','0','0','0','1','0','42501']),
+('R checkins', array['4','4','0','4','2','1','0','0','0','1','0','42501']),
+('R checkins of Kofi(minor)', array['1','1','0','1','0','0','0','0','0','1','0','42501']),
 ('R programs', array['2','2','0','2','0','1','0','0','0','1','0','42501']),
-('R participants', array['3','3','0','2','0','1','0','0','0','1','0','42501']),
-('R participants Kofi', array['1','1','0','0','0','0','0','0','0','1','0','42501']),
+('R participants', array['3','3','0','3','0','1','0','0','0','1','0','42501']),
+('R participants Kofi', array['1','1','0','1','0','0','0','0','0','1','0','42501']),
 ('W insert service', array['1','42501','42501','1','42501','42501','42501','42501','42501','42501','42501','42501']),
 ('W insert service in Choir program', array['1','42501','42501','1','42501','42501','42501','42501','42501','42501','42501','42501']),
 ('W update service name', array['1','0','0','1','0','0','0','0','0','0','0','42501']),
@@ -137,17 +138,17 @@ insert into expected values
 ('W counts direct update', array['42501','42501','42501','42501','42501','42501','42501','42501','42501','42501','42501','42501']),
 ('W counts direct delete', array['42501','42501','42501','42501','42501','42501','42501','42501','42501','42501','42501','42501']),
 ('W checkin adult Esi', array['1','42501','42501','1','1','42501','42501','42501','42501','42501','42501','42501']),
-('W checkin minor Kofi', array['1','42501','42501','42501','42501','42501','42501','42501','42501','42501','42501','42501']),
+('W checkin minor Kofi', array['1','42501','42501','1','42501','42501','42501','42501','42501','42501','42501','42501']),
 ('W checkin archived Akosua', array['1','42501','42501','1','42501','42501','42501','42501','42501','42501','42501','42501']),
 ('W checkin visitor Abena', array['1','42501','42501','1','1','42501','42501','42501','42501','42501','42501','42501']),
 ('W checkin archived svc', array['42501','42501','42501','42501','42501','42501','42501','42501','42501','42501','42501','42501']),
 ('W checkin as someone else', array['1','42501','42501','42501','42501','42501','42501','42501','42501','42501','42501','42501']),
-('W delete checkins', array['4','0','0','3','2','0','0','0','0','0','0','42501']),
+('W delete checkins', array['4','0','0','4','2','0','0','0','0','0','0','42501']),
 ('W update checkin', array['42501','42501','42501','42501','42501','42501','42501','42501','42501','42501','42501','42501']),
 ('W participant Kwame->Choir', array['1','42501','42501','1','42501','42501','42501','42501','42501','42501','42501','42501']),
-('W participant Kofi->Choir', array['1','42501','42501','42501','42501','42501','42501','42501','42501','42501','42501','42501']),
+('W participant Kofi->Choir', array['1','42501','42501','1','42501','42501','42501','42501','42501','42501','42501','42501']),
 ('W participant Kwame->Children prog', array['1','42501','42501','1','42501','42501','42501','42501','42501','42501','42501','42501']),
-('W delete participants', array['3','0','0','2','0','1','0','0','0','1','0','42501']),
+('W delete participants', array['3','0','0','3','0','1','0','0','0','1','0','42501']),
 ('W update participant', array['42501','42501','42501','42501','42501','42501','42501','42501','42501','42501','42501','42501']);
 
 select is(

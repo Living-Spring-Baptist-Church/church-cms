@@ -10,7 +10,7 @@ select plan(118);
 
 select is((select count(*) from public.households), 3::bigint, 'should seed three households');
 select is((select count(*) from public.members), 8::bigint, 'should seed eight members');
-select is((select count(*) from public.members where private.is_minor(date_of_birth)), 2::bigint, 'should seed two minors');
+select is((select count(*) from public.members where private.is_minor(date_of_birth, adult_confirmed)), 2::bigint, 'should seed two minors');
 select is((select count(*) from public.members where archived_at is not null), 1::bigint, 'should seed one archived member');
 select is((select count(*) from public.members where status = 'visitor'), 1::bigint, 'should seed one visitor');
 select is((select count(distinct status) from public.members), 4::bigint, 'should seed members in four different statuses');
@@ -18,7 +18,7 @@ select is(
   (select count(*) from public.members as member
    join public.member_departments as link on link.member_id = member.id
    join public.departments on departments.id = link.department_id
-   where private.is_minor(member.date_of_birth) and departments.is_childrens_ministry),
+   where private.is_minor(member.date_of_birth, member.adult_confirmed) and departments.is_childrens_ministry),
   1::bigint,
   'should seed one minor in the children''s ministry'
 );
@@ -133,13 +133,13 @@ select is(
   expected,
   format('should %s %s executing %s', case when expected then 'let' else 'not let' end, role_name, signature)
 ) from (values
-  ('authenticated', 'private.is_minor(date)', true),
+  ('authenticated', 'private.is_minor(date, boolean)', true),
   ('authenticated', 'private.can_view_minors()', true),
   ('authenticated', 'private.can_manage_members()', true),
   ('authenticated', 'private.heads_department_of_member(uuid, boolean)', true),
   ('authenticated', 'private.is_minor_on(date, date)', false),
   ('authenticated', 'private.age_of_majority()', false),
-  ('anon', 'private.is_minor(date)', false),
+  ('anon', 'private.is_minor(date, boolean)', false),
   ('anon', 'private.can_view_minors()', false),
   ('anon', 'private.can_manage_members()', false),
   ('anon', 'private.heads_department_of_member(uuid, boolean)', false)
@@ -168,11 +168,11 @@ from (values
 ) as cases (dob, on_day, expected, description);
 
 select is(private.is_minor_on(null, '2026-10-05'), true, 'should treat an unknown date of birth as a minor');
-select is(private.is_minor(null), true, 'should treat an unknown date of birth as a minor today');
-select is(private.is_minor((current_date - interval '18 years')::date), false, 'should treat a person who turns 18 today as an adult');
-select is(private.is_minor((current_date - interval '18 years' + interval '1 day')::date), true, 'should treat a person who turns 18 tomorrow as a minor');
-select is(private.is_minor((current_date - interval '18 years' - interval '1 day')::date), false, 'should treat a person who turned 18 yesterday as an adult');
-select is(private.is_minor(current_date), true, 'should treat a person born today as a minor');
+select is(private.is_minor(null, false), true, 'should treat an unknown date of birth as a minor today');
+select is(private.is_minor((current_date - interval '18 years')::date, false), false, 'should treat a person who turns 18 today as an adult');
+select is(private.is_minor((current_date - interval '18 years' + interval '1 day')::date, false), true, 'should treat a person who turns 18 tomorrow as a minor');
+select is(private.is_minor((current_date - interval '18 years' - interval '1 day')::date, false), false, 'should treat a person who turned 18 yesterday as an adult');
+select is(private.is_minor(current_date, false), true, 'should treat a person born today as a minor');
 
 -- Comments: pg_graphql publishes them as API documentation
 

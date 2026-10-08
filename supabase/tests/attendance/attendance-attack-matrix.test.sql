@@ -199,14 +199,16 @@ from (values
 ) as ids (id, service_id);
 
 -- Check-ins: c1 usher checked in AdultChoir, c2 secretary checked in AdultNone, c3 super admin checked in
--- MinorChildren at SundayPast, c4 super admin checked in MinorChildren at the children's event.
+-- MinorChildren at SundayPast, c4 super admin checked in MinorChildren at the children's event, c5 super admin
+-- checked in MinorChoir (a minor outside the children's ministry) at SundayPast.
 insert into public.attendance_checkins (id, service_id, member_id, checked_in_by)
 select ids.id, ids.service_id, ids.member_id, (select staff_id from actors where label = ids.actor)
 from (values
   ('bb400000-0000-4000-8000-000000000001'::uuid, 'bb200000-0000-4000-8000-000000000001'::uuid, '60000000-0000-4000-8000-000000000001'::uuid, 'usher'),
   ('bb400000-0000-4000-8000-000000000002'::uuid, 'bb200000-0000-4000-8000-000000000001'::uuid, '60000000-0000-4000-8000-000000000003'::uuid, 'secretary'),
   ('bb400000-0000-4000-8000-000000000003'::uuid, 'bb200000-0000-4000-8000-000000000001'::uuid, '60000000-0000-4000-8000-000000000005'::uuid, 'super_admin'),
-  ('bb400000-0000-4000-8000-000000000004'::uuid, 'bb200000-0000-4000-8000-000000000005'::uuid, '60000000-0000-4000-8000-000000000005'::uuid, 'super_admin')
+  ('bb400000-0000-4000-8000-000000000004'::uuid, 'bb200000-0000-4000-8000-000000000005'::uuid, '60000000-0000-4000-8000-000000000005'::uuid, 'super_admin'),
+  ('bb400000-0000-4000-8000-000000000005'::uuid, 'bb200000-0000-4000-8000-000000000001'::uuid, '60000000-0000-4000-8000-000000000006'::uuid, 'super_admin')
 ) as ids (id, service_id, member_id, actor);
 
 -- Participants: ChoirProgram has AdultChoir and MinorChoir, ChildrenProgram has MinorChildren and AdultChoir,
@@ -236,8 +238,8 @@ $$;
 select is(pg_temp.run_as('head_choir', $$select * from public.attendance_counts where id = 'bb300000-0000-4000-8000-000000000003'$$), 0::bigint, 'should not show a department head the count of another department''s event by its id');
 select is(pg_temp.run_as('head_choir', $$select * from public.services where id = 'bb200000-0000-4000-8000-000000000005'$$), 0::bigint, 'should not show a department head another department''s service by its id');
 select is(pg_temp.run_as('head_choir', $$select * from public.programs where id = 'bb100000-0000-4000-8000-000000000003'$$), 0::bigint, 'should not show a department head another department''s program by its id');
-select is(pg_temp.run_as('secretary', $$select * from public.program_participants where id = 'bb500000-0000-4000-8000-000000000003'$$), 0::bigint, 'should not show the secretary a child''s registration by its id');
-select is(pg_temp.run_as('secretary', $$select * from public.attendance_checkins where id = 'bb400000-0000-4000-8000-000000000003'$$), 0::bigint, 'should not show the secretary a child''s check-in by its id');
+select is(pg_temp.run_as('secretary', $$select * from public.program_participants where id = 'bb500000-0000-4000-8000-000000000002'$$), 0::bigint, 'should not show the secretary the registration of a minor outside the children''s ministry by its id');
+select is(pg_temp.run_as('secretary', $$select * from public.attendance_checkins where id = 'bb400000-0000-4000-8000-000000000005'$$), 0::bigint, 'should not show the secretary the check-in of a minor outside the children''s ministry by its id');
 select is(pg_temp.run_as('usher', $$select * from public.attendance_checkins where id = 'bb400000-0000-4000-8000-000000000002'$$), 0::bigint, 'should not show an usher a check-in someone else made');
 select is(pg_temp.run_as('usher', $$select * from public.services where id = 'bb200000-0000-4000-8000-000000000003'$$), 0::bigint, 'should not show an usher an archived service by its id');
 select is(pg_temp.run_as('usher', $$update public.services set name = 'Pwned' where id = 'bb200000-0000-4000-8000-000000000001'$$), 0::bigint, 'should not let an usher rename a service by its id');
@@ -251,14 +253,14 @@ select is((select count(*) from public.services where name = 'Pwned') + (select 
 select is(
   (select count(distinct sqlstate_and_message) from (
      select pg_temp.try_as('secretary', format($$insert into public.program_participants (program_id, member_id) values ('bb100000-0000-4000-8000-000000000004', %L)$$, member_id)) as sqlstate_and_message
-     from (values ('60000000-0000-4000-8000-000000000005'::uuid), ('60000000-0000-4000-8000-000000000008'), ('00000000-0000-4000-8000-0000000000aa')) as probes (member_id)
+     from (values ('60000000-0000-4000-8000-000000000006'::uuid), ('60000000-0000-4000-8000-000000000008'), ('00000000-0000-4000-8000-0000000000aa')) as probes (member_id)
    ) as answers),
-  1::bigint, 'should answer a child, an unknown date of birth and a missing member identically when the secretary registers them');
+  1::bigint, 'should answer a hidden minor, an unknown date of birth and a missing member identically when the secretary registers them');
 
 select is(
   (select count(distinct answer) from (
      select pg_temp.try_as('usher', format($$insert into public.attendance_checkins (service_id, member_id, checked_in_by) values ('bb200000-0000-4000-8000-000000000002', %L, %L)$$, member_id, (select staff_id from actors where label = 'usher'))) as answer
-     from (values ('60000000-0000-4000-8000-000000000005'::uuid), ('60000000-0000-4000-8000-000000000008'), ('00000000-0000-4000-8000-0000000000aa')) as probes (member_id)
+     from (values ('60000000-0000-4000-8000-000000000006'::uuid), ('60000000-0000-4000-8000-000000000008'), ('00000000-0000-4000-8000-0000000000aa')) as probes (member_id)
    ) as answers),
   1::bigint, 'should answer a child, an unknown date of birth and a missing member identically when an usher checks them in');
 
@@ -267,11 +269,11 @@ select is(pg_temp.seen_as('usher', 'public.member_names', 'first_name'), 'AdultC
 -- 3. Nested GraphQL reads cannot reach a child through another path
 
 select is(
-  pg_temp.graphql_as('secretary', $$query { servicesCollection { edges { node { attendanceCheckinsCollection { edges { node { member { firstName dateOfBirth } } } } } } } }$$)::text ~ 'Minor',
-  false, 'should not name a child anywhere in a nested read from services as the secretary');
+  pg_temp.graphql_as('secretary', $$query { servicesCollection { edges { node { attendanceCheckinsCollection { edges { node { member { firstName dateOfBirth } } } } } } } }$$)::text ~ 'MinorChoir',
+  false, 'should not name a minor outside the children''s ministry anywhere in a nested read from services as the secretary');
 select is(
-  pg_temp.graphql_as('secretary', $$query { programsCollection { edges { node { programParticipantsCollection { edges { node { member { firstName } } } } } } } }$$)::text ~ 'Minor',
-  false, 'should not name a child anywhere in a nested read from programs as the secretary');
+  pg_temp.graphql_as('secretary', $$query { programsCollection { edges { node { programParticipantsCollection { edges { node { member { firstName } } } } } } } }$$)::text ~ 'MinorChoir',
+  false, 'should not name a minor outside the children''s ministry anywhere in a nested read from programs as the secretary');
 select is(
   pg_temp.graphql_as('usher', $$query { servicesCollection { edges { node { attendanceCheckinsCollection { edges { node { member { firstName } } } } } } } }$$)::text ~ '(Adult|Minor)',
   false, 'should not name any member in a nested read as an usher');
@@ -279,7 +281,7 @@ select is(
   pg_temp.graphql_as('usher', $$query { servicesCollection { edges { node { program { name } } } } }$$)::text ~ 'Program',
   false, 'should not let an usher read programs through the service they are attached to');
 select is(
-  pg_temp.graphql_as('head_choir', $$query { programsCollection { edges { node { servicesCollection { edges { node { attendanceCheckinsCollection { edges { node { member { firstName } } } } } } } } } } }$$)::text ~ 'Minor',
+  pg_temp.graphql_as('head_choir', $$query { programsCollection { edges { node { servicesCollection { edges { node { attendanceCheckinsCollection { edges { node { member { firstName } } } } } } } } } } }$$)::text ~ 'MinorChoir',
   false, 'should not name a child in a nested read as a department head of another department');
 select is(
   pg_temp.graphql_as('treasurer', $$query { servicesCollection { edges { node { id } } } }$$) #>> '{data,servicesCollection,edges}',

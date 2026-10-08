@@ -22,7 +22,7 @@ select is(
    join public.members on members.id = participant.member_id
    join public.member_departments as link on link.member_id = members.id
    join public.departments on departments.id = link.department_id
-   where private.is_minor(members.date_of_birth) and departments.is_childrens_ministry),
+   where private.is_minor(members.date_of_birth, members.adult_confirmed) and departments.is_childrens_ministry),
   1::bigint, 'should seed one minor in the children''s ministry as a participant');
 select is((select count(*) from public.attendance_checkins), 1::bigint, 'should seed one check-in');
 
