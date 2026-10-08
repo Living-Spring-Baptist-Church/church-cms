@@ -45,7 +45,7 @@ Access is role-based: every staff account gets one or more roles, and each role 
 
 | Module | Super Admin | Pastor | Treasurer | Secretary | Usher | Dept Head |
 | --- | --- | --- | --- | --- | --- | --- |
-| Members & visitors | E | V | V (names only) | E | V (names only) | V (own dept) |
+| Members & visitors | E | V (archived too) | V (names only) | E | V (names only) | V (own dept) |
 | Attendance | E | V | - | E | E | V (own dept) |
 | Programs | E | V | - | E | - | E (own dept) |
 | Offerings, tithes, pledges | V | V | E | - | - | - |
@@ -58,6 +58,14 @@ Access is role-based: every staff account gets one or more roles, and each role 
 | Public content (Content Team: E) | E | E | - | E | - | E (own dept events) |
 
 Two safety rules apply everywhere: nobody can approve their own expense, and nobody, including Super Admin, can edit or delete audit trail entries.
+
+**Children's records (people under 18, decided by the owner, LBC-42).**
+
+- Super Admin and Pastor can view every child record, archived ones included. Only Super Admin can edit any child record.
+- The Secretary and the head of a children's ministry department (a department flagged as children's ministry) can create and edit children's records, and every change is audit logged. The Secretary sees and edits only the children who belong to a children's ministry department, not youth or other minors. A Department Head sees and edits only the children of the department they head; other department heads stay read-only and see adults only.
+- Ushers and the Treasurer never see children's names (`member_names` lists adults only). Ushers record headcount. The children's ministry team checks children in by name.
+- A person with no date of birth is treated as a child, unless the Secretary or Super Admin ticked "adult confirmed" at registration. A visitor therefore needs a birth date or the tick.
+- The Secretary sees a household only when it has no members yet or someone in it she may see.
 
 ## Scope & phasing
 

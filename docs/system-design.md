@@ -117,6 +117,7 @@ create table members (
   last_name text not null,
   phone text, email text,
   date_of_birth date,               -- drives is_minor
+  adult_confirmed boolean not null default false,  -- an office user confirmed an adult with no date of birth (LBC-42)
   gender text, marital_status text,
   status member_status not null default 'visitor',
   first_visit_on date, joined_on date,
@@ -441,11 +442,12 @@ Policies call them wrapped in `(select ...)` so Postgres evaluates them once per
 ```sql
 alter table members enable row level security;
 
+-- Illustrative only: the real policies are split per role (see Children's records below)
 -- Office, pastor, admin see all adult members
 create policy members_read_office on members for select to authenticated
 using (
   (select private.has_any_role('{super_admin,pastor,secretary}'))
-  and (not private.is_minor(date_of_birth)
+  and (not private.is_minor(date_of_birth, adult_confirmed)
        or (select private.has_any_role('{super_admin,pastor}')))
 );
 
@@ -477,7 +479,20 @@ using (status = 'published' and publish_at <= now()
 
 **Names-only access.** Ushers and the treasurer need member names (for check-in and tithes) but not phone numbers or addresses. RLS works on rows, not columns, so they get no policy on `members` and instead read a narrow `member_names` view (id, first and last name, status) that checks their role itself.
 
-**Children's records.** `private.is_minor(date_of_birth)` hides under-18s from everyone except super admin, pastor and heads of children's ministry departments.
+**Children's records (LBC-42).** `private.is_minor(date_of_birth, adult_confirmed)` decides who is a minor: a known date of birth decides on its own (under `private.age_of_majority()`); with no date of birth the person is an adult only when an office user ticked `adult_confirmed` at registration, otherwise a minor. Only super admin and secretary can set `adult_confirmed` (a `before` trigger, because column grants cannot tell roles apart). Who sees and writes minors:
+
+| Role | Reads | Writes |
+| --- | --- | --- |
+| Super admin | every minor, archived included | every minor |
+| Pastor | every minor, archived included | nothing |
+| Secretary | the minors who belong to a department flagged `is_childrens_ministry` (treated like a children's ministry head), archived included. Never youth or other minors. | those children, through `registerChild` (create) and the table (edit, archive). Adults as before. |
+| Head of a children's ministry department | the non-archived minors of the department they head | edit those children and register new ones in their department, through `registerChild`. Cannot archive. |
+| Other department heads | adults of their own department only | nothing |
+| Usher, treasurer | nobody under 18 (`member_names` never lists a minor): headcount only | nothing |
+
+`registerChild` is the only way for the secretary and a ministry head to create a child: a plain insert cannot work because the child must be linked to a department before anyone but the super admin can read it. The function (`security definer`, role check first) inserts the member and the department link in one transaction, so there is never an unreadable orphan. Removing a minor's children's ministry link would orphan the child, so only the super admin may. Every write is audited with the real user as actor.
+
+**Households (LBC-42, to be confirmed by the church).** Super admin and pastor see every household, archived included. The secretary sees a household when it has no members yet (so she can create one) or contains at least one person she may see; a household holding only youth or other minors she may not read stays hidden, so its address does not leak. Heads, ushers and the treasurer see no households.
 
 Every policy gets a pgTAP test per role: "an usher cannot read `ledger_entries`", "a department head sees only their department".
 
@@ -546,6 +561,7 @@ comment on schema public is e'@graphql({"inflect_names": true})';
 | Operation | Kind | Backed by | PRD |
 | --- | --- | --- | --- |
 | `membersCollection` | Query | `members` + RLS | MEM-01, MEM-04 |
+| `registerChild(firstName, lastName, departmentId, ...)` | Mutation | function: creates a child and links the children's ministry department in one step (LBC-42) | MEM-01 |
 | `convertVisitorToMember(memberId)` | Mutation | function | MEM-02 |
 | `recordAttendanceCounts(serviceId, ...)` | Mutation | function (upsert, one per service) | ATT-02 |
 | `startCashCount` / `confirmCashCount(id)` | Mutation | functions; confirm creates ledger entry | FIN-01 |
@@ -636,5 +652,5 @@ A CI check lists all `public` tables and fails if any lacks RLS policies or the 
 - [ ] Attendance: headcount, per-person, or both?
 - [ ] Which MoMo networks and banks the church uses, and whether statements can be downloaded as CSV.
 - [ ] Does anyone besides the treasurer record money (e.g. department treasurers)?
-- [ ] Which departments count as children's ministry for access to minors' records?
+- [x] Which departments count as children's ministry for access to minors' records? Answered in LBC-42: those flagged `is_childrens_ministry`. The secretary and the head of such a department read and edit the children of those departments only.
 - [ ] Is a single currency (GHS) enough, or are foreign-currency gifts received?

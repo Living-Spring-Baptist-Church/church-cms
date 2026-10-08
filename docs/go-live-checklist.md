@@ -56,8 +56,8 @@ Everything here must be true **before any real member, child or financial data i
 - [ ] Data protection consent wording agreed with the church and stored with `consent_recorded_at`.
 - [ ] **Retention** decided: finance audit rows are kept 7 years.
 - [ ] **Anonymisation procedure for `audit.log` defined.** It does not exist yet and needs a migration, so a member can be erased without breaking the audit trail.
-- [ ] Children's records rules in place (LBC-42): only the allowed roles create and edit, every change is audit logged, ushers never see children's names.
-- [ ] Visitor rule works: with no birth date and no "adult confirmed" tick, the visitor is treated as a minor (LBC-42).
+- [ ] Children's records rules in place (LBC-42): only the allowed roles create and edit (super admin, the secretary and the children's ministry heads, only for children of a children's ministry department), every change is audit logged, ushers never see children's names. Tested by `supabase/tests/members/childrens-records-access.test.sql`.
+- [ ] Visitor rule works: with no birth date and no "adult confirmed" tick, the visitor is treated as a minor (LBC-42). Check with the church that the registration form asks for one of the two.
 
 ## Operations
 
@@ -70,7 +70,7 @@ Everything here must be true **before any real member, child or financial data i
 
 - [ ] **ADR statuses updated.** ADR-004, ADR-008, ADR-015 and ADR-016 move from Proposed or "Accepted for the demo" to Accepted (or superseded) after sign-off ([ADR index](adr/README.md)).
 - [ ] Department heads are read-only for now: revisit with the church.
-- [ ] Secretary access to children's records: the open question in LBC-42 (how the secretary can write without reading minors) is settled and tested.
+- [ ] Secretary access to children's records is settled (LBC-42, option d: she is treated like a children's ministry head). Confirm with the church: which departments are flagged as children's ministry, that the secretary also sees those children's check-ins and follow-ups, and that she sees a household only when it is empty or holds someone she may see.
 - [ ] Ushers edit attendance within 7 days; later edits only by the secretary or super admin; all in the audit log (LBC-43).
 - [ ] Self-approval is allowed, logged and shown as "self-approved" (LBC-44); decide whether to switch it off for production.
 - [ ] Service times come from the `service_times` table (LBC-45).

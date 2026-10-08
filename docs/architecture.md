@@ -242,7 +242,7 @@ Security rests on three layers: who you are (Auth + 2FA), what you may touch (ro
 
 **Public forms.** Contact and "I'm new" forms use rate limiting and a bot check, and write to a staging table staff review before anything becomes a visitor record.
 
-**Children's data.** Records of under-18s carry a flag; RLS restricts them to children's ministry leads and admins, and they never appear in public content.
+**Children's data.** A person is a minor by date of birth, or when no date of birth is known and no one confirmed they are an adult (`adult_confirmed`). RLS restricts children's records to super admin, pastor, the secretary and the heads of children's ministry departments (the last two only for the children of those departments), and they never appear in public content. Ushers and the treasurer never see them.
 
 ## Environments, deployment & operations
 
