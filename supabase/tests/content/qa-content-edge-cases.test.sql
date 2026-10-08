@@ -216,7 +216,9 @@ select is(pg_temp.call_as('10000000-0000-4000-8000-000000000001', 'return_conten
 
 -- Expiry job: archives only expired published rows, is idempotent and leaves a null actor in the audit trail.
 select set_config('request.jwt.claims', '', true);
-select is(private.archive_expired_content(), 3, 'should archive exactly the three published items that have expired (two fixture rows and the seed one)');
+-- The expiry cron job may already have archived the expired seed item, so take it out of play: only fixture rows count.
+update public.content_items set expires_at = null where id = 'c1000000-0000-4000-8000-000000000005';
+select is(private.archive_expired_content(), 2, 'should archive exactly the two published fixture items that have expired');
 select is(private.archive_expired_content(), 0, 'should archive nothing on a second run');
 select is(
   (select count(*) from audit.log where table_name = 'content_items' and action = 'UPDATE' and record_id = 'c1100000-0000-4000-8000-000000000006' and actor_id is null and changed_fields @> array['status']),
