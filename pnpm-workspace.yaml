@@ -20,7 +20,7 @@ minimumReleaseAgeExclude:
 
 saveExact: true
 
-# Next 16.3.6 pulls source-map-js 1.2.1 (via postcss) and sharp 0.35.4, both with high advisories
+# Next 16.3.x pulls source-map-js 1.2.1 (via postcss) and sharp 0.35.4, both with high advisories
 # (GHSA-68fv-2mgg-jv7q, GHSA-wq5f-xc86-pv6w). Remove these overrides once Next ships patched
 # dependencies, and re-check them on every Next upgrade.
 overrides:
