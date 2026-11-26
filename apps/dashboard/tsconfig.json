@@ -5,7 +5,8 @@
       "@core/*": ["./src/core/*"],
       "@features/*": ["./src/features/*"],
       "@config/*": ["./src/config/*"],
-      "@helpers/*": ["./src/helpers/*"]
+      "@helpers/*": ["./src/helpers/*"],
+      "@test/*": ["./src/test/*"]
     }
   },
   "include": ["next-env.d.ts", "next.config.ts", "vitest.config.ts", "src", ".next/types/**/*.ts"],
