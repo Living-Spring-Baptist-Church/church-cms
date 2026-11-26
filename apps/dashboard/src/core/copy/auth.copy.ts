@@ -60,7 +60,6 @@ export const AUTH_COPY = {
     greeting: "Welcome",
     rolesLabel: "Your roles",
     securityLink: "Account security",
-    noRoles: "No roles are assigned to your account yet.",
   },
   roleLabels: {
     super_admin: "Super admin",
@@ -70,11 +69,6 @@ export const AUTH_COPY = {
     usher: "Usher",
     department_head: "Department head",
     content_editor: "Content editor",
-  },
-  shell: {
-    skipLink: "Skip to main content",
-    homeLinkLabel: "Living Spring Baptist Church home",
-    accountNavLabel: "Account",
   },
   errors: {
     heading: "Something went wrong",

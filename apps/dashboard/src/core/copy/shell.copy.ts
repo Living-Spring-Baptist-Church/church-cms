@@ -1,0 +1,21 @@
+export const SHELL_COPY = {
+  skipLink: "Skip to main content",
+  churchName: "Living Spring Baptist Church",
+  homeLinkLabel: "Living Spring Baptist Church home",
+  accountNavLabel: "Account",
+  mainNavLabel: "Main",
+  menuLabel: "Menu",
+  notAvailable: "Not available yet",
+  modules: {
+    overview: "Overview",
+    members: "Members",
+    attendance: "Attendance",
+    programs: "Programs",
+    finance: "Finance",
+    messaging: "Messaging",
+    reports: "Reports",
+    content: "Content",
+    audit: "Audit trail",
+    settings: "Settings",
+  },
+} as const;

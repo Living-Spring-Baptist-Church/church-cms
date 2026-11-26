@@ -1,0 +1,20 @@
+query LastSundayAttendance($asOf: Datetime!) {
+  servicesCollection(
+    filter: { type: { eq: sunday }, startsAt: { lte: $asOf }, archivedAt: { is: NULL } }
+    orderBy: [{ startsAt: DescNullsLast }]
+    first: 1
+  ) {
+    edges {
+      node {
+        name
+        startsAt
+        attendanceCount {
+          men
+          women
+          children
+          visitors
+        }
+      }
+    }
+  }
+}

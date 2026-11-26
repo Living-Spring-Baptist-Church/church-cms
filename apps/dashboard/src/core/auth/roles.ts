@@ -27,6 +27,17 @@ export function hasRole(
   return heldRoles.some((heldRole) => allowedRoles.includes(heldRole));
 }
 
+/** Roles that may see finance figures: the PRD matrix gives Offerings to super admin and pastor (view) and treasurer (edit). */
+export const FINANCE_ROLES: readonly StaffRoleName[] = ["super_admin", "pastor", "treasurer"];
+
+/** Keeps the entries that at least one held role may use. An empty list of held roles keeps nothing. */
+export function filterByRoles<TEntry extends { readonly allowedRoles: readonly StaffRoleName[] }>(
+  entries: readonly TEntry[],
+  heldRoles: readonly StaffRoleName[],
+): readonly TEntry[] {
+  return entries.filter((entry) => hasRole(heldRoles, entry.allowedRoles));
+}
+
 export function requiresMfa(heldRoles: readonly StaffRoleName[]): boolean {
   return hasRole(heldRoles, MFA_REQUIRED_ROLES);
 }
