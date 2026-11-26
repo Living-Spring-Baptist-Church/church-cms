@@ -1779,6 +1779,7 @@ type Query {
     """Sort order to apply to the collection"""
     orderBy: [DepartmentsOrderBy!]
   ): DepartmentsConnection!
+  getNewVisitorsThisMonth: Int
 
   """Retrieve a record of type `Households` by its primary key"""
   householdsByPk(

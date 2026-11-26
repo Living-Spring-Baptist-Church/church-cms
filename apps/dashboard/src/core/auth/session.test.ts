@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createAppError } from "@core/errors/app-error";
 import type { StaffProfile } from "@core/types/staff.types";
 
-import { requireStaff } from "./session";
+import { requireRole, requireStaff } from "./session";
 
 const mocks = vi.hoisted(() => ({
   getState: vi.fn(),
@@ -18,6 +18,9 @@ vi.mock("react", async (importOriginal) => ({
 vi.mock("next/navigation", () => ({
   redirect: (destination: string) => {
     throw new Error(`REDIRECT ${destination}`);
+  },
+  notFound: () => {
+    throw new Error("NOT_FOUND");
   },
 }));
 vi.mock("@core/auth/request-context", () => ({
@@ -128,5 +131,33 @@ describe("requireStaff", () => {
       "Could not load the staff profile",
       expect.objectContaining({ detail: "ECONNREFUSED" }),
     );
+  });
+});
+
+describe("requireRole", () => {
+  it("should admit a staff member whose role is in the allowed list", async () => {
+    mocks.fetchStaffProfile.mockResolvedValue(profile({ roles: ["secretary"] }));
+
+    await expect(requireRole(["secretary", "pastor"])).resolves.toMatchObject({
+      profile: { roles: ["secretary"] },
+    });
+  });
+
+  it("should return the session client so the page can read as the signed-in user", async () => {
+    const session = await requireRole(["usher"]);
+
+    expect(session.client).toBeDefined();
+  });
+
+  it("should show the not-found page to a role outside the allowed list", async () => {
+    mocks.fetchStaffProfile.mockResolvedValue(profile({ roles: ["usher"] }));
+
+    await expect(requireRole(["pastor"])).rejects.toThrow("NOT_FOUND");
+  });
+
+  it("should send a visitor without a session to the login page before checking roles", async () => {
+    mocks.getState.mockResolvedValue({ status: "signed_out" });
+
+    await expect(requireRole(["pastor"])).rejects.toThrow("REDIRECT /login");
   });
 });

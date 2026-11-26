@@ -13,3 +13,8 @@ docs/
 graphql/schema.graphql
 graphql/dashboard.schema.graphql
 packages/db/src/generated/
+
+# Playwright output and saved sign-in state. Generated and gitignored in apps/dashboard/e2e/.gitignore.
+apps/dashboard/e2e/.auth/
+apps/dashboard/e2e/test-results/
+apps/dashboard/e2e/playwright-report/

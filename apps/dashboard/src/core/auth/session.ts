@@ -1,9 +1,10 @@
 import { cache } from "react";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import type { Client } from "@urql/core";
 
 import { createRequestAuth } from "@core/auth/request-context";
 import { createSessionGraphqlClient } from "@core/auth/session-client";
-import { hasAnyRole } from "@core/auth/roles";
+import { hasAnyRole, hasRole, type StaffRoleName } from "@core/auth/roles";
 import { determineLoginStep } from "@core/auth/login-step";
 import { ROUTES } from "@core/data/routes.data";
 import { logger } from "@config/logger";
@@ -14,6 +15,8 @@ export type StaffSession = {
   readonly profile: StaffProfile;
   readonly email: string;
   readonly hasVerifiedFactor: boolean;
+  /** Acts as the signed-in user, so pages pass it to services and RLS applies. */
+  readonly client: Client;
 };
 
 /**
@@ -27,10 +30,8 @@ export const requireStaff = cache(async (): Promise<StaffSession> => {
   if (state.status === "signed_out") {
     return redirect(ROUTES.login);
   }
-  const profileResult = await fetchStaffProfile(
-    createSessionGraphqlClient(state.accessToken),
-    state.userId,
-  );
+  const client = createSessionGraphqlClient(state.accessToken);
+  const profileResult = await fetchStaffProfile(client, state.userId);
   if (!profileResult.ok) {
     logger.error("Could not load the staff profile", {
       code: profileResult.error.code,
@@ -46,5 +47,22 @@ export const requireStaff = cache(async (): Promise<StaffSession> => {
   if (determineLoginStep({ session: state, profile }) !== "complete") {
     return redirect(ROUTES.login);
   }
-  return { profile, email: state.email, hasVerifiedFactor: state.verifiedFactorId !== null };
+  return {
+    profile,
+    email: state.email,
+    hasVerifiedFactor: state.verifiedFactorId !== null,
+    client,
+  };
 });
+
+/**
+ * Guards a page or layout that only some roles may use. Anyone else gets the not-found page, so a
+ * module's existence is not revealed to roles that cannot use it.
+ */
+export async function requireRole(allowedRoles: readonly StaffRoleName[]): Promise<StaffSession> {
+  const session = await requireStaff();
+  if (!hasRole(session.profile.roles, allowedRoles)) {
+    notFound();
+  }
+  return session;
+}

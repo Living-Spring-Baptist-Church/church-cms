@@ -165,6 +165,8 @@
 }
 
 .dark {
+  /* Native controls and scrollbars follow the dark tokens too. */
+  color-scheme: dark;
   --background: var(--color-navy-950);
   --foreground: var(--color-neutral-50);
   --card: var(--color-navy-900);

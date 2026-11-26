@@ -8,6 +8,7 @@
     "build": "next build",
     "lint": "eslint --max-warnings 0 .",
     "test": "vitest run --coverage",
+    "test:e2e": "playwright test --config e2e/playwright.config.ts",
     "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
@@ -24,7 +25,9 @@
     "zod": "4.6.5"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.14.1",
     "@lbc/config": "workspace:*",
+    "@playwright/test": "1.65.1",
     "@tailwindcss/postcss": "4.3.3",
     "@testing-library/dom": "10.4.2",
     "@testing-library/jest-dom": "7.0.1",

@@ -15,5 +15,6 @@ export { Input, type InputProps } from "#primitives/input/input";
 export { Label, type LabelProps } from "#primitives/label/label";
 export { Skeleton, type SkeletonProps } from "#primitives/skeleton/skeleton";
 
+export { EmptyState, type EmptyStateProps } from "#components/empty-state/empty-state";
 export { ErrorState, type ErrorStateProps } from "#components/error-state/error-state";
 export { FormField, type FormFieldProps } from "#components/form-field/form-field";
