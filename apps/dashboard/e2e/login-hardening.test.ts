@@ -7,8 +7,7 @@ import { LOCAL_DEV_PASSWORD, SEED_STAFF } from "./support/seed-staff";
 test.describe("login form before hydration", () => {
   test.use({ javaScriptEnabled: false });
 
-  // Re-enable when LBC-49 (login form method="post") merges; the fix is not on this branch yet.
-  test.fixme("should never put the password in the URL when the form is submitted before JavaScript runs", async ({
+  test("should never put the password in the URL when the form is submitted before JavaScript runs", async ({
     page,
   }) => {
     await page.goto("/login");
