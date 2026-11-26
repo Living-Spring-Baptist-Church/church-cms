@@ -18,7 +18,7 @@ type AppHeaderProps = {
 /** The authenticated header: church name, the user's account and sign out, and the module navigation. */
 export function AppHeader({ staffName, modules }: AppHeaderProps) {
   return (
-    <header className="bg-primary text-primary-foreground">
+    <header className="bg-sidebar text-sidebar-foreground">
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
         <Link
           href={ROUTES.home}
@@ -38,7 +38,7 @@ export function AppHeader({ staffName, modules }: AppHeaderProps) {
           <LogoutButton
             signOut={logoutAction}
             variant="outline"
-            className="border-primary-foreground bg-transparent text-primary-foreground hover:bg-primary-foreground hover:text-primary"
+            className="border-sidebar-foreground bg-transparent text-sidebar-foreground hover:bg-sidebar-foreground hover:text-sidebar"
           />
         </nav>
       </div>

@@ -21,7 +21,7 @@ function AppNavList({ modules, className }: AppNavListProps) {
           {module.isAvailable ? (
             <AppNavLink href={module.href} label={module.label} />
           ) : (
-            <span className="flex min-h-11 flex-col justify-center px-3 text-sm text-primary-foreground/70">
+            <span className="flex min-h-11 flex-col justify-center px-3 text-sm text-sidebar-foreground/70">
               {module.label}
               <span className="text-xs">{SHELL_COPY.notAvailable}</span>
             </span>
