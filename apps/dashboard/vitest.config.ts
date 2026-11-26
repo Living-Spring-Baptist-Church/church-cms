@@ -15,6 +15,7 @@ export default defineConfig({
       "@features": sourcePath("features"),
       "@config": sourcePath("config"),
       "@helpers": sourcePath("helpers"),
+      "@test": sourcePath("test"),
     },
   },
   test: {

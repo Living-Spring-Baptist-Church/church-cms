@@ -1,6 +1,12 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+
+import {
+  fillServerForm,
+  renderServerForm,
+  resolveNativeSubmissionUrl,
+} from "@test/native-form-submission";
 
 import { LoginForm } from "./login-form";
 
@@ -73,5 +79,24 @@ describe("LoginForm", () => {
     expect(await screen.findByRole("button", { name: "Signing in" })).toBeDisabled();
     finish(GENERIC_FAILURE);
     expect(await screen.findByRole("button", { name: "Sign in" })).toBeEnabled();
+  });
+
+  it("should post a submit made before hydration so the password never reaches the URL", () => {
+    const serverForm = renderServerForm(<LoginForm signIn={vi.fn()} />);
+    fillServerForm(serverForm, { email: "staff@example.org", password: "a-password" });
+
+    const submissionUrl = resolveNativeSubmissionUrl(serverForm);
+
+    expect(serverForm.method).toBe("post");
+    expect(submissionUrl.search).toBe("");
+    expect(submissionUrl.href).not.toContain("a-password");
+  });
+
+  it("should handle the submit in the page instead of navigating once hydrated", () => {
+    renderForm();
+    const form = screen.getByRole("button", { name: "Sign in" }).closest("form");
+
+    expect(form).toHaveAttribute("method", "post");
+    expect(fireEvent.submit(form as HTMLFormElement)).toBe(false);
   });
 });
