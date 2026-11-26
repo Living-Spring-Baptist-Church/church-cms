@@ -7,7 +7,7 @@
 
 begin;
 
-select plan(31);
+select plan(37);
 
 -- Fixture: start from an empty congregation and identity model so the demo seed cannot influence the results.
 set local session_replication_role = replica;
@@ -28,7 +28,8 @@ from (
   select date_trunc('month', (now() at time zone private.church_time_zone())::timestamp)::date as month_start
 ) as this_month;
 
--- One actor per role, a department head, an active staff member with no role, an inactive super admin, and anon.
+-- One actor per role, a department head, a pastor who is also secretary, an active staff member with no role, an
+-- inactive super admin, and anon.
 create temp table actors (label text primary key, staff_id uuid, is_active boolean not null default true);
 create temp table actor_roles (label text not null, role public.app_role not null, department_id uuid);
 
@@ -48,6 +49,7 @@ values
   ('content_editor', '50000000-0000-4000-8000-000000000007', true),
   ('no_role', '50000000-0000-4000-8000-000000000008', true),
   ('inactive_super_admin', '50000000-0000-4000-8000-000000000009', false),
+  ('pastor_secretary', '50000000-0000-4000-8000-000000000010', true),
   ('anon', null, true);
 
 insert into actor_roles (label, role, department_id)
@@ -59,7 +61,9 @@ values
   ('treasurer', 'treasurer', null),
   ('department_head', 'department_head', '40000000-0000-4000-8000-000000000001'),
   ('content_editor', 'content_editor', null),
-  ('inactive_super_admin', 'super_admin', null);
+  ('inactive_super_admin', 'super_admin', null),
+  ('pastor_secretary', 'pastor', null),
+  ('pastor_secretary', 'secretary', null);
 
 insert into auth.users (id, aud, role, email)
 select staff_id, 'authenticated', 'authenticated', label || '@test.invalid' from actors where label <> 'anon';
@@ -186,6 +190,18 @@ select is(pg_temp.count_as('secretary', 'aal1'), 7, 'should count for the secret
 
 select throws_ok($$select pg_temp.count_as('super_admin', 'aal1')$$, 'P0001', 'AUTH_FORBIDDEN', 'should refuse the super admin at aal1, since the role needs two-factor');
 select throws_ok($$select pg_temp.count_as('pastor', 'aal1')$$, 'P0001', 'AUTH_FORBIDDEN', 'should refuse the pastor at aal1, since the role needs two-factor');
+select is(pg_temp.count_as('pastor_secretary', 'aal1'), 7, 'should count only the secretary scope for a pastor who is also secretary at aal1, so the downgrade cannot widen the count');
+select is(pg_temp.count_as('pastor_secretary', 'aal2'), 9, 'should count every member for a pastor who is also secretary once two-factor is complete');
+
+-- Session time zone: the month comes from the church time zone, so a client zone either side of UTC changes nothing.
+
+set local timezone = 'Pacific/Kiritimati';
+select is(pg_temp.count_as('super_admin', 'aal2'), 9, 'should count the same nine for the super admin when the session is at UTC+14');
+select is(pg_temp.count_as('secretary', 'aal2'), 7, 'should count the same seven for the secretary when the session is at UTC+14');
+set local timezone = 'Pacific/Pago_Pago';
+select is(pg_temp.count_as('super_admin', 'aal2'), 9, 'should count the same nine for the super admin when the session is at UTC-11');
+select is(pg_temp.count_as('secretary', 'aal2'), 7, 'should count the same seven for the secretary when the session is at UTC-11');
+set local timezone to default;
 
 -- Denied roles: every other staff role, staff with no role, an inactive super admin, and anon.
 

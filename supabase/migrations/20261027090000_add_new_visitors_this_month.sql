@@ -32,14 +32,16 @@ security definer
 set search_path = ''
 as $$
 declare
-  v_church_today date := (now() at time zone private.church_time_zone())::date;
-  v_month_start date := date_trunc('month', v_church_today::timestamp)::date;
-  v_next_month_start date := (v_month_start + interval '1 month')::date;
+  v_month_start date;
+  v_next_month_start date;
 begin
   if not private.can_see_visitor_counts() then
     raise exception using errcode = 'P0001', message = 'AUTH_FORBIDDEN',
       detail = 'Only a super admin, pastor or secretary can see the new visitor count';
   end if;
+
+  v_month_start := date_trunc('month', now() at time zone private.church_time_zone())::date;
+  v_next_month_start := (v_month_start + interval '1 month')::date;
 
   -- Mirrors the members select policies for these roles: super admin and pastor read every member (can_view_minors);
   -- the secretary reads adults and the children of a children's ministry (is_minor false, or is_in_childrens_ministry).
@@ -57,7 +59,7 @@ begin
 end;
 $$;
 
-comment on function public.get_new_visitors_this_month() is 'Number of people whose first visit was in the current calendar month in the church time zone (Africa/Accra), whatever their status now. Counts only the members the caller can read, so the number can differ by role: super admin and pastor see every member, the secretary sees adults and the children of a children''s ministry. Super admin, pastor and secretary only. Errors: AUTH_FORBIDDEN.';
+comment on function public.get_new_visitors_this_month() is 'Number of people whose first visit was in the current calendar month in the church time zone, whatever their status now. Counts only the members the caller can read, so the number can differ by role: super admin and pastor see every member, the secretary sees adults and the children of a children''s ministry. Super admin, pastor and secretary only. Errors: AUTH_FORBIDDEN.';
 
 revoke execute on function public.get_new_visitors_this_month() from public, anon;
 grant execute on function public.get_new_visitors_this_month() to authenticated;
