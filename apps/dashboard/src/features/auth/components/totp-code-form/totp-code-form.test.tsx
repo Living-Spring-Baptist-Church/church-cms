@@ -1,6 +1,12 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+
+import {
+  fillServerForm,
+  renderServerForm,
+  resolveNativeSubmissionUrl,
+} from "@test/native-form-submission";
 
 import { TotpCodeForm } from "./totp-code-form";
 
@@ -95,5 +101,31 @@ describe("TotpCodeForm", () => {
     );
 
     expect(screen.getByLabelText("Code")).toHaveAccessibleDescription("");
+  });
+
+  it("should post a submit made before hydration so the code never reaches the URL", () => {
+    const serverForm = renderServerForm(
+      <TotpCodeForm
+        label="Code"
+        submitLabel="Verify"
+        pendingLabel="Verifying"
+        submitCode={vi.fn()}
+      />,
+    );
+    fillServerForm(serverForm, { code: "123456" });
+
+    const submissionUrl = resolveNativeSubmissionUrl(serverForm);
+
+    expect(serverForm.method).toBe("post");
+    expect(submissionUrl.search).toBe("");
+    expect(submissionUrl.href).not.toContain("123456");
+  });
+
+  it("should handle the submit in the page instead of navigating once hydrated", () => {
+    renderForm();
+    const form = screen.getByRole("button", { name: "Verify" }).closest("form");
+
+    expect(form).toHaveAttribute("method", "post");
+    expect(fireEvent.submit(form as HTMLFormElement)).toBe(false);
   });
 });

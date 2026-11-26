@@ -32,8 +32,10 @@ export function LoginForm({ signIn }: LoginFormProps) {
     });
   });
 
+  // POST keeps the password out of the URL if the form is submitted before hydration.
   return (
     <form
+      method="post"
       onSubmit={(event) => {
         void submit(event);
       }}

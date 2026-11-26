@@ -64,6 +64,7 @@ Configured in each app's `tsconfig.json` and mirrored in Vitest config:
 @features/*  -> src/features/*
 @config/*    -> src/config/*
 @helpers/*   -> src/helpers/*
+@test/*      -> src/test/*         shared test helpers, imported from tests only
 ```
 
 Workspace packages: `@lbc/ui`, `@lbc/config`, `@lbc/db` (generated types only), `@lbc/providers`.

@@ -51,8 +51,10 @@ export function TotpCodeForm({
     });
   });
 
+  // POST keeps the code out of the URL if the form is submitted before hydration.
   return (
     <form
+      method="post"
       onSubmit={(event) => {
         void submit(event);
       }}
