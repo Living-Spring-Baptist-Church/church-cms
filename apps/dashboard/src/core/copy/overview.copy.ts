@@ -16,6 +16,11 @@ export const OVERVIEW_COPY = {
     children: "Children",
     visitors: "Visitors",
   },
+  newVisitorsThisMonth: {
+    title: "New visitors this month",
+    countLabel: "First visits since the start of the month",
+    noVisitors: "No new visitors have been recorded this month yet.",
+  },
   monthToDateGiving: {
     title: "Month-to-date giving",
   },

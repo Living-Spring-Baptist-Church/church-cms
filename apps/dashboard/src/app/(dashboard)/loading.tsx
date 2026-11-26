@@ -23,6 +23,17 @@ export default function DashboardLoading() {
             </CardContent>
           </Card>
         </li>
+        <li>
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-1/2" />
+            </CardHeader>
+            <CardContent className="flex flex-col gap-2">
+              <Skeleton className="h-4 w-2/3" />
+              <Skeleton className="h-8 w-16" />
+            </CardContent>
+          </Card>
+        </li>
       </ul>
     </main>
   );

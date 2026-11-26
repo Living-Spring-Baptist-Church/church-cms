@@ -24,6 +24,26 @@ describe("isOverviewCardVisible", () => {
     },
   );
 
+  it.each<StaffRoleName>(["super_admin", "pastor", "secretary"])(
+    "should show new visitors this month to %s",
+    (role) => {
+      expect(isOverviewCardVisible([role], OVERVIEW_CARD_IDS.newVisitorsThisMonth)).toBe(true);
+    },
+  );
+
+  it.each<StaffRoleName>(["usher", "treasurer", "department_head", "content_editor"])(
+    "should hide new visitors this month from %s",
+    (role) => {
+      expect(isOverviewCardVisible([role], OVERVIEW_CARD_IDS.newVisitorsThisMonth)).toBe(false);
+    },
+  );
+
+  it("should show new visitors this month when any held role allows it", () => {
+    expect(
+      isOverviewCardVisible(["usher", "secretary"], OVERVIEW_CARD_IDS.newVisitorsThisMonth),
+    ).toBe(true);
+  });
+
   it("should hide month-to-date giving from every role until finance has a data source", () => {
     expect(isOverviewCardVisible(["pastor"], OVERVIEW_CARD_IDS.monthToDateGiving)).toBe(false);
     expect(isOverviewCardVisible(["treasurer"], OVERVIEW_CARD_IDS.monthToDateGiving)).toBe(false);

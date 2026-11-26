@@ -5,6 +5,7 @@ import type { RoleGatedLink } from "@core/types/navigation.types";
 
 export const OVERVIEW_CARD_IDS = {
   lastSundayAttendance: "lastSundayAttendance",
+  newVisitorsThisMonth: "newVisitorsThisMonth",
   monthToDateGiving: "monthToDateGiving",
 } as const;
 
@@ -26,10 +27,18 @@ const ATTENDANCE_CARD_ROLES: readonly StaffRoleName[] = [
   "usher",
 ];
 
+// Matches private.can_see_visitor_counts: the database refuses every other role with AUTH_FORBIDDEN.
+const NEW_VISITORS_CARD_ROLES: readonly StaffRoleName[] = ["super_admin", "pastor", "secretary"];
+
 export const OVERVIEW_CARDS: readonly OverviewCardConfig[] = [
   {
     id: OVERVIEW_CARD_IDS.lastSundayAttendance,
     allowedRoles: ATTENDANCE_CARD_ROLES,
+    isAvailable: true,
+  },
+  {
+    id: OVERVIEW_CARD_IDS.newVisitorsThisMonth,
+    allowedRoles: NEW_VISITORS_CARD_ROLES,
     isAvailable: true,
   },
   {

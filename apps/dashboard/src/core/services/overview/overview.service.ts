@@ -1,11 +1,11 @@
-import { LastSundayAttendanceDocument } from "@lbc/db/dashboard";
+import { LastSundayAttendanceDocument, NewVisitorsThisMonthDocument } from "@lbc/db/dashboard";
 import type { Client } from "@urql/core";
 
 import { logger } from "@config/logger";
 import { runQuery } from "@config/graphql-client";
 import type { StaffRoleName } from "@core/auth/roles";
 import { OVERVIEW_CARD_IDS } from "@core/data/overview.data";
-import type { Result } from "@core/errors/app-error";
+import { createAppError, type AppError, type Result } from "@core/errors/app-error";
 import type {
   AttendanceHeadcount,
   LastSundayAttendance,
@@ -19,6 +19,13 @@ type AttendanceCountRow = {
   readonly children: number;
   readonly visitors: number;
 } | null;
+
+const ATTENDANCE_FAILURE_LOG = "Could not load last Sunday's attendance";
+const NEW_VISITORS_FAILURE_LOG = "Could not load new visitors this month";
+
+function logReadFailure(message: string, error: AppError): void {
+  logger.error(message, { code: error.code, detail: error.technicalDetail });
+}
 
 function toHeadcount(row: AttendanceCountRow): AttendanceHeadcount | null {
   if (row === null) {
@@ -41,10 +48,7 @@ export async function fetchLastSundayAttendance(
     variables: { asOf: asOf.toISOString() },
   });
   if (!result.ok) {
-    logger.error("Could not load last Sunday's attendance", {
-      code: result.error.code,
-      detail: result.error.technicalDetail,
-    });
+    logReadFailure(ATTENDANCE_FAILURE_LOG, result.error);
     return result;
   }
   const service = result.data.servicesCollection.edges.at(0)?.node;
@@ -61,17 +65,37 @@ export async function fetchLastSundayAttendance(
   };
 }
 
+/** Reads the count of first visits this month. The database refuses roles that may not see it. */
+export async function fetchNewVisitorsThisMonth(client: Client): Promise<Result<number>> {
+  const result = await runQuery({ client, document: NewVisitorsThisMonthDocument, variables: {} });
+  if (!result.ok) {
+    logReadFailure(NEW_VISITORS_FAILURE_LOG, result.error);
+    return result;
+  }
+  const visitorCount = result.data.getNewVisitorsThisMonth;
+  if (visitorCount === null) {
+    // A count is never null for a permitted role, so null means the API broke its contract.
+    const error = createAppError("server", "getNewVisitorsThisMonth returned null");
+    logReadFailure(NEW_VISITORS_FAILURE_LOG, error);
+    return { ok: false, error };
+  }
+  return { ok: true, data: visitorCount };
+}
+
 export type LoadOverviewOptions = {
   readonly client: Client;
   readonly roles: readonly StaffRoleName[];
   readonly asOf: Date;
 };
 
-/** Reads only the cards the roles may see. A card the role may not see is never queried. */
+/** Reads only the cards the roles may see, in parallel. A card the role may not see is never queried. */
 export async function loadOverview(options: LoadOverviewOptions): Promise<OverviewData> {
   const { client, roles, asOf } = options;
   const canSeeAttendance = isOverviewCardVisible(roles, OVERVIEW_CARD_IDS.lastSundayAttendance);
-  return {
-    lastSundayAttendance: canSeeAttendance ? await fetchLastSundayAttendance(client, asOf) : null,
-  };
+  const canSeeNewVisitors = isOverviewCardVisible(roles, OVERVIEW_CARD_IDS.newVisitorsThisMonth);
+  const [lastSundayAttendance, newVisitorsThisMonth] = await Promise.all([
+    canSeeAttendance ? fetchLastSundayAttendance(client, asOf) : null,
+    canSeeNewVisitors ? fetchNewVisitorsThisMonth(client) : null,
+  ]);
+  return { lastSundayAttendance, newVisitorsThisMonth };
 }

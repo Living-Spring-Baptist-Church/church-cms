@@ -1,10 +1,21 @@
+import { LastSundayAttendanceDocument, NewVisitorsThisMonthDocument } from "@lbc/db/dashboard";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { StaffRoleName } from "@core/auth/roles";
 import { createAppError } from "@core/errors/app-error";
 
-import { fetchLastSundayAttendance, loadOverview } from "./overview.service";
+import {
+  fetchLastSundayAttendance,
+  fetchNewVisitorsThisMonth,
+  loadOverview,
+} from "./overview.service";
 
-const mocks = vi.hoisted(() => ({ runQuery: vi.fn(), error: vi.fn() }));
+type QueryOptions = { readonly document: unknown };
+
+const mocks = vi.hoisted(() => ({
+  runQuery: vi.fn<(options: QueryOptions) => Promise<unknown>>(),
+  error: vi.fn(),
+}));
 
 vi.mock("@config/graphql-client", () => ({ runQuery: mocks.runQuery }));
 vi.mock("@config/logger", () => ({ logger: { error: mocks.error } }));
@@ -99,31 +110,122 @@ describe("fetchLastSundayAttendance", () => {
   });
 });
 
+describe("fetchNewVisitorsThisMonth", () => {
+  it("should read the new visitors document", async () => {
+    mocks.runQuery.mockResolvedValue({ ok: true, data: { getNewVisitorsThisMonth: 5 } });
+
+    await fetchNewVisitorsThisMonth(CLIENT);
+
+    expect(mocks.runQuery).toHaveBeenCalledWith(
+      expect.objectContaining({ document: NewVisitorsThisMonthDocument }),
+    );
+  });
+
+  it("should return the number of new visitors this month", async () => {
+    mocks.runQuery.mockResolvedValue({ ok: true, data: { getNewVisitorsThisMonth: 5 } });
+
+    await expect(fetchNewVisitorsThisMonth(CLIENT)).resolves.toEqual({ ok: true, data: 5 });
+  });
+
+  it("should return zero as a real count when no one visited for the first time", async () => {
+    mocks.runQuery.mockResolvedValue({ ok: true, data: { getNewVisitorsThisMonth: 0 } });
+
+    await expect(fetchNewVisitorsThisMonth(CLIENT)).resolves.toEqual({ ok: true, data: 0 });
+  });
+
+  it("should treat a null count as a server error and log it", async () => {
+    mocks.runQuery.mockResolvedValue({ ok: true, data: { getNewVisitorsThisMonth: null } });
+
+    const result = await fetchNewVisitorsThisMonth(CLIENT);
+
+    expect(result).toMatchObject({ ok: false, error: { code: "server" } });
+    expect(mocks.error).toHaveBeenCalledWith(
+      "Could not load new visitors this month",
+      expect.objectContaining({ code: "server" }),
+    );
+  });
+
+  it("should pass a refused read through as an error and log its detail", async () => {
+    const failure = { ok: false, error: createAppError("forbidden", "AUTH_FORBIDDEN") };
+    mocks.runQuery.mockResolvedValue(failure);
+
+    await expect(fetchNewVisitorsThisMonth(CLIENT)).resolves.toBe(failure);
+    expect(mocks.error).toHaveBeenCalledWith(
+      "Could not load new visitors this month",
+      expect.objectContaining({ code: "forbidden", detail: "AUTH_FORBIDDEN" }),
+    );
+  });
+});
+
+function answerEachDocument(): void {
+  mocks.runQuery.mockImplementation(({ document }) => {
+    if (document === NewVisitorsThisMonthDocument) {
+      return Promise.resolve({ ok: true, data: { getNewVisitorsThisMonth: 6 } });
+    }
+    return Promise.resolve({ ok: true, data: serviceEdges(RECORDED_COUNTS) });
+  });
+}
+
+function queriedDocuments(): readonly unknown[] {
+  return mocks.runQuery.mock.calls.map(([options]) => options.document);
+}
+
 describe("loadOverview", () => {
-  it("should read attendance for a role that may see the card", async () => {
-    mocks.runQuery.mockResolvedValue({ ok: true, data: serviceEdges(RECORDED_COUNTS) });
+  it("should read attendance but never new visitors for an usher", async () => {
+    answerEachDocument();
 
     const overview = await loadOverview({ client: CLIENT, roles: ["usher"], asOf: AS_OF });
 
-    expect(mocks.runQuery).toHaveBeenCalledTimes(1);
+    expect(queriedDocuments()).toEqual([LastSundayAttendanceDocument]);
     expect(overview.lastSundayAttendance).toMatchObject({ ok: true });
+    expect(overview.newVisitorsThisMonth).toBeNull();
   });
 
-  it("should never query attendance for a role without the permission", async () => {
-    const overview = await loadOverview({ client: CLIENT, roles: ["treasurer"], asOf: AS_OF });
+  it.each<StaffRoleName>(["super_admin", "pastor", "secretary"])(
+    "should read both cards for %s",
+    async (role) => {
+      answerEachDocument();
 
-    expect(mocks.runQuery).not.toHaveBeenCalled();
-    expect(overview.lastSundayAttendance).toBeNull();
+      const overview = await loadOverview({ client: CLIENT, roles: [role], asOf: AS_OF });
+
+      expect(queriedDocuments()).toHaveLength(2);
+      expect(queriedDocuments()).toContain(NewVisitorsThisMonthDocument);
+      expect(overview.newVisitorsThisMonth).toEqual({ ok: true, data: 6 });
+      expect(overview.lastSundayAttendance).toMatchObject({ ok: true });
+    },
+  );
+
+  it.each<StaffRoleName>(["treasurer", "department_head", "content_editor"])(
+    "should never query any card for %s, who may see neither",
+    async (role) => {
+      const overview = await loadOverview({ client: CLIENT, roles: [role], asOf: AS_OF });
+
+      expect(mocks.runQuery).not.toHaveBeenCalled();
+      expect(overview).toEqual({ lastSundayAttendance: null, newVisitorsThisMonth: null });
+    },
+  );
+
+  it("should start both reads before either finishes", async () => {
+    mocks.runQuery.mockReturnValue(new Promise(() => undefined));
+
+    void loadOverview({ client: CLIENT, roles: ["pastor"], asOf: AS_OF });
+    await Promise.resolve();
+
+    expect(mocks.runQuery).toHaveBeenCalledTimes(2);
   });
 
-  it("should never query attendance for a department head, whose view is limited to their department", async () => {
-    const overview = await loadOverview({
-      client: CLIENT,
-      roles: ["department_head"],
-      asOf: AS_OF,
-    });
+  it("should still return attendance when the new visitors read fails", async () => {
+    mocks.runQuery.mockImplementation(({ document }) =>
+      Promise.resolve(
+        document === NewVisitorsThisMonthDocument
+          ? { ok: false, error: createAppError("network", "socket closed") }
+          : { ok: true, data: serviceEdges(RECORDED_COUNTS) },
+      ),
+    );
 
-    expect(mocks.runQuery).not.toHaveBeenCalled();
-    expect(overview.lastSundayAttendance).toBeNull();
+    const overview = await loadOverview({ client: CLIENT, roles: ["secretary"], asOf: AS_OF });
+
+    expect(overview.lastSundayAttendance).toMatchObject({ ok: true });
+    expect(overview.newVisitorsThisMonth).toMatchObject({ ok: false, error: { code: "network" } });
   });
 });

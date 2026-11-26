@@ -20,4 +20,6 @@ export type LastSundayAttendance = {
  */
 export type OverviewData = {
   readonly lastSundayAttendance: Result<LastSundayAttendance | null> | null;
+  /** Number of people whose first visit falls in the current calendar month, church time. */
+  readonly newVisitorsThisMonth: Result<number> | null;
 };
