@@ -1,7 +1,12 @@
 {
   "path": ["apps", "packages", "scripts"],
   "format": ["typescript", "tsx", "javascript", "jsx"],
-  "ignore": ["**/generated/**"],
+  "ignore": [
+    "**/generated/**",
+    "**/e2e/.auth/**",
+    "**/e2e/test-results/**",
+    "**/e2e/playwright-report/**"
+  ],
   "minTokens": 100,
   "exitCode": 1,
   "reporters": ["console"]
