@@ -73,7 +73,11 @@ function findVerifiedTotpFactorId(user: User): string | null {
 
 // Older auth servers return raw SVG markup, newer ones return a ready data URI.
 function toQrCodeDataUri(qrCode: string): string {
-  return qrCode.startsWith(DATA_URI_SCHEME) ? qrCode : `${SVG_DATA_URI_PREFIX}${qrCode}`;
+  // The auth server ends the QR code with a newline, which next/image rejects in development.
+  const trimmedQrCode = qrCode.trim();
+  return trimmedQrCode.startsWith(DATA_URI_SCHEME)
+    ? trimmedQrCode
+    : `${SVG_DATA_URI_PREFIX}${trimmedQrCode}`;
 }
 
 async function readAuthState(auth: SupabaseAuthApi): Promise<AuthState> {
