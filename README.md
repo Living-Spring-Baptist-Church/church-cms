@@ -165,7 +165,7 @@ Put the local URL and anon key from `pnpm db:status` in `apps/dashboard/.env.loc
 
 The `gitleaks-action` is not used: it needs a paid license key for organisation repositories.
 
-`pnpm-workspace.yaml` carries two `overrides` (`sharp` 0.35.5, `source-map-js` 1.2.2). Both are transitive dependencies of the pinned Next.js (16.3.x) that carry high advisories (GHSA-wq5f-xc86-pv6w and GHSA-68fv-2mgg-jv7q), and the `Dependency audit` job fails on high advisories. They are patch bumps inside the ranges Next declares (`sharp` `^0.35.4`). Remove the overrides once Next ships patched dependencies, and re-check them on every Next upgrade.
+`pnpm-workspace.yaml` carries one `override`: `source-map-js` 1.2.2. The pinned Next.js (16.4.x) pins `postcss` 8.5.23, which declares `source-map-js` `^1.2.1`, and 1.2.1 carries a high advisory (GHSA-68fv-2mgg-jv7q) that would fail the `Dependency audit` job. The override is a patch bump inside that range. Remove it once Next ships a `postcss` that requires a patched `source-map-js`, and re-check it on every Next upgrade.
 
 ### RLS and audit structure check
 
