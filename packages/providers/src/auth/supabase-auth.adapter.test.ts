@@ -182,6 +182,22 @@ describe("startTotpEnrolment", () => {
     expect(result.ok && result.data.qrCodeDataUri).toBe("data:image/svg+xml;utf-8,<svg/>");
   });
 
+  it.each([
+    ["a data URI", "data:image/svg+xml;utf-8,<svg/>\n "],
+    ["raw SVG", "<svg/>\n "],
+  ])("should strip trailing whitespace from %s QR code", async (_label, qrCode) => {
+    const { port } = createFakeAuth({
+      enrollResult: {
+        data: { id: FACTOR_ID, totp: { qr_code: qrCode, secret: "S" } },
+        error: null,
+      },
+    });
+
+    const result = await port.startTotpEnrolment();
+
+    expect(result.ok && result.data.qrCodeDataUri).toBe("data:image/svg+xml;utf-8,<svg/>");
+  });
+
   it("should report a failed enrolment", async () => {
     const { port } = createFakeAuth({ enrollResult: { data: null, error: FAILURE } });
 
